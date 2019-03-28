@@ -17,6 +17,7 @@
 namespace qmcplusplus
 {
 
+
   SPOSetBuilder::SPOSetBuilder(Communicate *comm)
     : MPIObjectBase(comm), legacy(true) 
   {
@@ -49,8 +50,9 @@ namespace qmcplusplus
     // process general sposet construction requests
     //   and preserve legacy interface 
     SPOSet* sposet = 0;
-    if(legacy && input_info.legacy_request)
+    if(legacy && input_info.legacy_request){
       sposet = createSPOSetFromXML(cur);
+    }
     else
       sposet = createSPOSet(cur,input_info);
 

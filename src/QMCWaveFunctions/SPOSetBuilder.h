@@ -26,7 +26,6 @@
 #include <QMCWaveFunctions/SPOSetInputInfo.h>
 #include "QMCWaveFunctions/SPOSet.h"
 
-
 namespace qmcplusplus
 {
 
@@ -42,6 +41,8 @@ namespace qmcplusplus
  * the user classes {\bf KNOW} what they need to use.
  * }
  */
+
+
 struct SPOSetBuilder: public QMCTraits, public MPIObjectBase
 {
   typedef std::map<std::string,SPOSet*> SPOPool_t;

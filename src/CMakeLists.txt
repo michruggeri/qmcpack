@@ -317,6 +317,7 @@ ENDIF()
   SUBDIRS(QMCWaveFunctions)
   SUBDIRS(QMCHamiltonians)
   SUBDIRS(QMCDrivers)
+  SUBDIRS(Interfaces)
 
   IF(BUILD_AFQMC)
    SUBDIRS(AFQMC)

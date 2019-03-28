@@ -826,5 +826,133 @@ EinsplineSetBuilder::ReadBands
 }
 #endif
 
+ //!!!!!!!!!!!!!!!!
+ /*
+ Here there is all the experimental stuff for the hdf5 interface for the current version of qmcpack;
+ most of it is taken from the old ion_mover, especially from the ReadOrbitalInfo in EinsplineSetBuilder_Interface.cpp;
+ for the moment everything is dumbly locally defined; when (if?) everthing works all the inclusions & references 
+ are to be fixed!
+ */
+bool
+ EinsplineSetBuilder::ReadOrbitalInfo_Interface()
+ {
+   //int NumCoreStates , NumMuffinTins , NumTwists , NumSpins , NumBands , NumAtomicOrbitals, NumElectrons;
+   //Tensor<double,OHMMS_DIM> Lattice, RecipLattice, LatticeInv, GGt;
+   //Tensor<int,OHMMS_DIM> TileMatrix;
+
+   std::cerr << "Declare the pointer to ESHDF5interface...";
+   ESHDF5Interface esinterface;
+   std::cerr << "  Done!\n";
+
+   std::cerr << "Initialize it... \n";
+   esinterface.initialize();
+   std::cerr << "  Done!\n";
+
+   esinterface.getVersion();
+
+   std::cerr << "Getting primitive vectors...";
+   esinterface.getPrimVecs(Lattice);
+   std::cerr << "  Done!\n";
+ 
+   OHMMS::Controller->barrier();
+   std::cerr << "Barrier: seems to be working\n";
+
+   for(int i=0;i<3;i++)
+     for(int j=0;j<3;j++)
+       TileMatrix(i,j) = (i==j) ? 1 : 0;
+ 
+   RecipLattice = 2.0*M_PI*inverse(Lattice);
+   SuperLattice = dot(TileMatrix, Lattice);
+   char buff[1000];
+   snprintf (buff, 1000,
+             "  Lattice = \n    [ %9.6f %9.6f %9.6f\n"
+             "      %9.6f %9.6f %9.6f\n"
+             "      %9.6f %9.6f %9.6f ]\n",
+             Lattice(0,0), Lattice(0,1), Lattice(0,2),
+             Lattice(1,0), Lattice(1,1), Lattice(1,2),
+             Lattice(2,0), Lattice(2,1), Lattice(2,2));
+   app_log() << buff;
+   OHMMS::Controller->barrier();
+   snprintf (buff, 1000,
+             "  SuperLattice = \n    [ %9.6f %9.6f %9.6f\n"
+             "      %9.6f %9.6f %9.6f\n"
+             "      %9.6f %9.6f %9.6f ]\n",
+             SuperLattice(0,0), SuperLattice(0,1), SuperLattice(0,2),
+             SuperLattice(1,0), SuperLattice(1,1), SuperLattice(1,2),
+             SuperLattice(2,0), SuperLattice(2,1), SuperLattice(2,2));
+   CheckLattice();
+   OHMMS::Controller->barrier();
+
+   app_log() << buff;
+   for (int i=0; i<3; i++)
+     for (int j=0; j<3; j++)
+       LatticeInv(i,j) = RecipLattice(i,j)/(2.0*M_PI);
+   int have_dpsi = false;
+   int NumAtomicOrbitals = 0;
+   NumCoreStates = NumMuffinTins = NumTwists = NumSpins = NumBands = NumAtomicOrbitals = 0;
+   NumElectrons=TargetPtcl.getTotalNum();
+
+   OHMMS::Controller->barrier();
+
+   NumBands          = esinterface.getNumBands();
+   NumSpins          = esinterface.getNumSpins();
+   NumTwists         = esinterface.getNumTwists();
+   NumCoreStates     = esinterface.getNumCoreStates();
+   NumMuffinTins     = esinterface.getNumMuffinTins();
+   have_dpsi         = esinterface.getHaveDPsi();
+   NumAtomicOrbitals = esinterface.getNumAtomicOrbitals();
+
+   HaveOrbDerivs = have_dpsi;
+   app_log() << "bands=" << NumBands << ", elecs=" << NumElectrons
+             << ", spins=" << NumSpins << ", twists=" << NumTwists
+             << ", muffin tins=" << NumMuffinTins
+             << ", core states=" << NumCoreStates << std::endl;
+   app_log() << "atomic orbital=" << NumAtomicOrbitals << std::endl;
+   if (TileFactor[0]!=1 || TileFactor[1]!=1 || TileFactor[2]!=1)
+     app_log() << "  Using a " << TileFactor[0] << "x" << TileFactor[1]
+               << "x" << TileFactor[2] << " tiling factor.\n";
+
+  //////////////////////////////////
+  // Read ion types and locations //
+  //////////////////////////////////
+  app_log()<<"Species ID's"<<std::endl;
+  ParticleSet::ParticleIndex_t species_ids;
+  esinterface.getSpeciesIDs(species_ids);
+  int num_species = species_ids.size();
+  app_log() << "#Species: " << num_species << std::endl;
+  for(int i=0;i<num_species;i++)
+    app_log()<<"speciesids: "<<species_ids[i] << std::endl;
+  Vector<int> atomic_numbers(num_species);
+  for (int isp=0; isp<num_species; isp++)
+  {
+    std::ostringstream name;
+    name << "/atoms/species_" << isp << "/atomic_number";
+    HDFAttribIO<int> h_atomic_number (atomic_numbers[isp]);
+    h_atomic_number.read(H5FileID, name.str().c_str());
+  }
+  app_log()<<"Get Atomic Numbers"<<std::endl;
+
+  esinterface.getAtomicNumbers(atomic_numbers);
+
+  for (int isp=0; isp<num_species; isp++)
+    app_log()<<"speciesids: "<<species_ids[isp] << "\t"<< atomic_numbers[isp] <<std::endl;
+  IonTypes.resize(species_ids.size());
+  for (int i=0; i<species_ids.size(); i++)
+    IonTypes[i] = atomic_numbers[species_ids[i]];
+  //HDFAttribIO<Vector<TinyVector<double,3> > > h_IonPos(IonPos);
+  //h_IonPos.read   (H5FileID, "/atoms/positions");
+
+  app_log()<<"get Ion Positions"<<std::endl;
+//  esinterface.getIonPositions(IonPos);
+
+  for (int i=0; i<IonTypes.size(); i++)
+    app_log() << "Atom type(" << i << ") = " << IonTypes[i] << std::endl;
+
+
+   exit(0);
+   return true;
+ }
+
+
 }
 

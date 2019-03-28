@@ -30,6 +30,12 @@
 #include "Numerics/HDFNumericAttrib.h"
 #include <map>
 
+//!!!!!!!!!!!!!!!!
+#include "Interfaces/ESHDF5/ESHDF5Interface.h"
+#include "Interfaces/ESInterfaceBase.h"
+#include "Interfaces/InterfaceBuilder.h"
+//!!!!!!!!!!!!!!!!
+
 #define PW_COEFF_NORM_TOLERANCE 1e-6
 
 class Communicate;
@@ -189,6 +195,9 @@ public:
   bool HasCoreOrbs;
   bool ReadOrbitalInfo ();
   bool ReadOrbitalInfo_ESHDF ();
+/////////
+bool ReadOrbitalInfo_Interface();
+////////
   void BroadcastOrbitalInfo();
   bool CheckLattice();
 

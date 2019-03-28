@@ -83,7 +83,8 @@ void EinsplineSetBuilder::set_metadata(int numOrbs, int TwistNum_inp)
   // orbitals themselves.                                        //
   /////////////////////////////////////////////////////////////////
   if (myComm->rank() == 0)
-    if (!ReadOrbitalInfo())
+    //if (!ReadOrbitalInfo())
+    if (!ReadOrbitalInfo_Interface())
     {
       app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");

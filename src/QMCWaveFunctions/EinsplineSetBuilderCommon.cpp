@@ -91,6 +91,7 @@ EinsplineSetBuilder::CheckLattice()
 {
   update_token(__FILE__,__LINE__,"CheckLattice");
 
+  std::cerr << SuperLattice(0,0) << "\t" << SuperLattice(0,1) << "\t" << SuperLattice(0,2) << std::endl;
   double diff=0.0;
   for (int i=0; i<OHMMS_DIM; i++)
     for (int j=0; j<OHMMS_DIM; j++)
@@ -99,7 +100,6 @@ EinsplineSetBuilder::CheckLattice()
       if(max_abs>MatchingTol)
         diff=std::max(diff,std::abs(SuperLattice(i,j) - TargetPtcl.Lattice.R(i,j))/max_abs);
     }
-
   if(diff>MatchingTol)
   {
     std::ostringstream o;
