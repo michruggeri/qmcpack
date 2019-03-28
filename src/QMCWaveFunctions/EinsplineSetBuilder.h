@@ -236,7 +236,8 @@ bool ReadOrbitalInfo_Interface();
   //Array<std::complex<double>,3> FFTbox;
 
   Vector<int> IonTypes;
-  Vector<TinyVector<double,OHMMS_DIM> > IonPos;
+  ParticleSet::ParticlePos_t IonPos;   // Changed the type; I think this is fine
+  //Vector<TinyVector<double,OHMMS_DIM> > IonPos;
   // mapping the ions in the supercell to the primitive cell
   std::vector<int> Super2Prim;
 
@@ -273,6 +274,7 @@ bool ReadOrbitalInfo_Interface();
   void TileIons();
   void OccupyBands(int spin, int sortBands, int numOrbs);
   void OccupyBands_ESHDF(int spin, int sortBands, int numOrbs);
+  void OccupyBands_Interface(int spin, int sortBands, int numOrbs);
 
 #if 0
   void ReadBands      (int spin, EinsplineSetExtended<std::complex<double> >* orbitalSet);

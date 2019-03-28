@@ -293,16 +293,21 @@ EinsplineSetBuilder::createSPOSetFromXML(xmlNodePtr cur)
   //////////////////////////////////
   // Create the OrbitalSet object
   //////////////////////////////////
+  app_log() << "So far so good\n";
   Timer mytimer;
   mytimer.restart();
-  OccupyBands(spinSet, sortBands, numOrbs);
+  OccupyBands_Interface(spinSet, sortBands, numOrbs);
+  //OccupyBands(spinSet, sortBands, numOrbs);
+  app_log() << "So far so good\n";
   if(spinSet==0) TileIons();
+  app_log() << "So far so good\n";
 
   bool use_single= (spo_prec == "single" || spo_prec == "float");
 
   // safeguard for a removed feature
   if(truncate=="yes") APP_ABORT("The 'truncate' feature of spline SPO has been removed. Please use hybrid orbital representation.");
 
+  app_log() << "So far so good\n";
 #if !defined(QMC_COMPLEX)
   if (UseRealOrbitals)
   {
