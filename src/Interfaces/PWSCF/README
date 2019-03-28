@@ -1,0 +1,6 @@
+NOTE:  Quantum Espresso 5.1 needs to be compiled with the -fPIC tag (both for the c and fortran bits).  
+This creates "position independent code", which allows the construction and linking of a shared library.  
+
+NOTE:  When building the pwinterface library, -shared -fPIC -o (name) needs to be included as well. 
+
+QMCPACK has autodiscovery of the library...  make sure that it is included in the PATH directory.   
