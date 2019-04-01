@@ -22,6 +22,10 @@
 #include "QMCApp/ParticleSetPool.h"
 #include <bitset>
 
+/////////
+#include "Interfaces/InterfaceBuilder.h"
+/////////
+
 class Communicate;
 
 namespace qmcplusplus
@@ -91,7 +95,9 @@ struct QMCDriverFactory : public MPIObjectBase
   /** QMCHamiltonian Pool
    */
   HamiltonianPool* hamPool;
-
+//////
+  InterfaceBuilder* intfcbuilder;
+//////
   /** default constructor **/
   QMCDriverFactory(Communicate* c);
 

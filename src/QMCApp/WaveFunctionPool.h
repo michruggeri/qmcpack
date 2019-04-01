@@ -27,7 +27,9 @@ namespace qmcplusplus
 {
 class ParticleSetPool;
 class ParticleSet;
-
+///
+class InterfaceBase;
+///
 /** @ingroup qmcapp
  * @brief Manage a collection of TrialWaveFunction objects
  *
@@ -97,6 +99,9 @@ public:
    */
   void addFactory(WaveFunctionFactory* psifac);
 
+  inline void setInterface(InterfaceBase* intfc){spointerface=intfc; app_log()<<"WaveFunctionFactory::setInterface spointerface="<<spointerface<<std::endl;};
+
+
 private:
   /// pointer to the primary TrialWaveFunction
   TrialWaveFunction* primaryPsi;
@@ -110,6 +115,9 @@ private:
    * is used as an input object for the evaluations.
    */
   ParticleSetPool* ptclPool;
+
+  InterfaceBase* spointerface;
+
 };
 } // namespace qmcplusplus
 #endif

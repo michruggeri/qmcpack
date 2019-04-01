@@ -84,6 +84,7 @@ void EinsplineSetBuilder::set_metadata(int numOrbs, int TwistNum_inp)
   /////////////////////////////////////////////////////////////////
   if (myComm->rank() == 0)
     //if (!ReadOrbitalInfo())
+    std::cerr << "Are we there yet?" << std::endl;
     if (!ReadOrbitalInfo_Interface())
     {
       app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";

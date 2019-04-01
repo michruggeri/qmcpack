@@ -23,6 +23,8 @@
 #include "QMCWaveFunctions/WaveFunctionComponentBuilder.h"
 #include "QMCWaveFunctions/SPOSetBuilderFactory.h"
 #include "Message/MPIObjectBase.h"
+#include "Interfaces/InterfaceBase.h"
+
 namespace qmcplusplus
 {
 
@@ -51,6 +53,8 @@ struct WaveFunctionFactory: public MPIObjectBase
   WaveFunctionFactory(ParticleSet* qp, PtclPoolType& pset, Communicate* c);
 
   ~WaveFunctionFactory();
+
+  void setInterface(InterfaceBase* intfc);
 
   void setPsi(TrialWaveFunction* psi);
 
@@ -82,6 +86,9 @@ struct WaveFunctionFactory: public MPIObjectBase
   WaveFunctionFactory* clone(ParticleSet* qp, int ip, const std::string& aname);
 
   std::vector<WaveFunctionFactory*> myClones;
+
+  InterfaceBase* interface;
+
 };
 
 }

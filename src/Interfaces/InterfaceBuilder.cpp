@@ -68,7 +68,7 @@ void InterfaceBuilder::putParticleSet(xmlNodePtr cur)
       ptclinterface=new ESHDF5Interface(myComm);
     }
   }
-  else if(ifacetype=="ESPWSCF")
+/*  else if(ifacetype=="ESPWSCF")
   {
     app_log() << "In ESPWSCF...\n";
     app_log()<< "ptclinterface="<<ptclinterface<<std::endl;
@@ -86,7 +86,7 @@ void InterfaceBuilder::putParticleSet(xmlNodePtr cur)
       app_log()<<"Create ESPWSCF from scratch...\n";
       ptclinterface=new ESPWSCFInterface(myComm);
     }
-  }
+  }*/
   else
   {
 	APP_ABORT("ERROR:  Interface type for ParticleSet not valid");
@@ -139,7 +139,7 @@ void InterfaceBuilder::putSPOSet(xmlNodePtr cur)
       spointerface=new ESHDF5Interface(myComm);
     }
   }
-  else if(ifacetype=="ESPWSCF")
+/*  else if(ifacetype=="ESPWSCF")
   {
     if (spointerface !=0  && spointerface->getInterfaceName() != "ESPWSCF")
     {
@@ -151,7 +151,7 @@ void InterfaceBuilder::putSPOSet(xmlNodePtr cur)
       spointerface=new ESPWSCFInterface(myComm);
     }
   }
-  else
+*/  else
   {
 	APP_ABORT("ERROR:  Interface type for SPOset not valid");
   }

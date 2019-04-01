@@ -59,6 +59,13 @@ void WaveFunctionFactory::setPsi(TrialWaveFunction* psi)
   targetPsi=psi;
 }
 
+void WaveFunctionFactory::setInterface(InterfaceBase* intfc)
+{
+  app_log()<<"WaveFunctionFactory::setInterface: intfc="<<intfc<<std::endl;
+  interface=intfc;
+  app_log()<<"WaveFunctionFactory::setInterface: interface="<<interface<<std::endl;
+}
+
 bool WaveFunctionFactory::build(xmlNodePtr cur, bool buildtree)
 {
   ReportEngine PRE(ClassName,"build");

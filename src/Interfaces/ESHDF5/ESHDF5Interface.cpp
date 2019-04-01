@@ -17,9 +17,8 @@ namespace qmcplusplus
 void ESHDF5Interface::initialize()
 {
    std::cerr << "Beginning the initialization... \n";
-   H5FileID = H5Fopen("pwscf.h5",H5F_ACC_RDWR,H5P_DEFAULT);
-   //H5FileID = H5Fopen(H5FileName.c_str(),H5F_ACC_RDWR,H5P_DEFAULT);
-   app_log()<<"Opened HDF5 File for reading...\n";
+   H5FileID = H5Fopen(H5FileName.c_str(),H5F_ACC_RDWR,H5P_DEFAULT);
+   app_log()<<"Opened HDF5 File for reading... " << H5FileName.c_str() << "\n";
    if (H5FileID < 0)
    {
      app_error() << "Could not open HDF5 file \"" << H5FileName

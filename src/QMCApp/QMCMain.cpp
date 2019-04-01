@@ -56,6 +56,10 @@ extern "C"
 #include "FCIQMC/App/SQCFactory.h"
 #endif
 
+////////////
+#include "Interfaces/InterfaceBuilder.h"
+////////////
+
 #define STR_VAL(arg) #arg
 #define GET_MACRO_VAL(arg) STR_VAL(arg)
 
@@ -464,6 +468,37 @@ bool QMCMain::validateXML()
 
   //initialize the random number generator
   xmlNodePtr rptr = myRandomControl.initialize(m_context);
+
+/////////////////////////////////////////////
+  //initialize the interface if it exists
+
+  OhmmsXPathObject intfc("//interface",m_context);
+  if(intfc.empty())
+  {
+    app_log() << "!!!!!No interface found.  Hopefully nothing bad happens...\n";
+    //interface not found.  ignore.  
+  }
+  else
+  {
+    app_log()<<"===Initializing Interface===\n";
+    std::cout<<"~~~~ RANK "<<myComm->rank()<<std::endl;
+    intfcbuilder = new InterfaceBuilder(myComm);
+    intfcbuilder->put(intfc[0]);
+    intfcbuilder->initialize();
+    std::cerr << "check... ";
+    intfcbuilder->getPtclInterface();
+    std::cerr << "OK!\n";
+
+    /// Now to update the wfn pool and ptcl set pool.  
+    ptclPool->setInterface(intfcbuilder->getPtclInterface());
+    psiPool->setInterface(intfcbuilder->getSPOInterface());
+
+    if (intfcbuilder->getPtclInterface() != 0){
+       ptclPool->createInterfaceParticleSet(intfcbuilder->getPtclNode(),0);
+    }
+  }
+////////////////////////////////////////////
+
   //preserve the input order
   xmlNodePtr cur = XmlDocStack.top()->getRoot()->children;
   lastInputNode  = NULL;

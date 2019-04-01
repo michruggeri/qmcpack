@@ -22,8 +22,12 @@
 #include "Particle/MCWalkerConfiguration.h"
 #include "Message/MPIObjectBase.h"
 
+#include "Interfaces/InterfaceBase.h"
+
 namespace qmcplusplus
 {
+
+//class InterfaceBase;
 /** @ingroup qmcapp
  * @brief Manage a collection of ParticleSet objects
  *
@@ -85,6 +89,13 @@ public:
    */
   ParticleSet* createESParticleSet(xmlNodePtr cur, const std::string& target, ParticleSet* qp);
 
+/////////////
+/** Modelled after createESParticleSet.  Reads a "ParticleSet" tag from the interface declaration
+   * and initializes a particle set. */
+  ParticleSet* createInterfaceParticleSet(xmlNodePtr cur, ParticleSet* qp);
+  inline void setInterface(InterfaceBase* intfc){interface=intfc;};
+/////////////
+
   /** randomize a particleset particleset/@random='yes' && particleset@random_source exists
    */
   void randomize();
@@ -114,6 +125,10 @@ private:
    * randomize() process initializations just before starting qmc sections
    */
   std::vector<xmlNodePtr> randomize_nodes;
+//////////
+InterfaceBase* interface;
+//////////
+
 };
 } // namespace qmcplusplus
 #endif

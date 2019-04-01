@@ -50,14 +50,14 @@ bool WaveFunctionPool::put(xmlNodePtr cur)
   pAttrib.add(role, "role");
   pAttrib.put(cur);
   ParticleSet* qp = ptclPool->getParticleSet(target);
-
-  { //check ESHDF should be used to initialize both target and associated ionic system
+  {//check ESHDF should be used to initialize both target and associated ionic system
     xmlNodePtr tcur = cur->children;
     while (tcur != NULL)
     { //check <determinantset/> or <sposet_builder/> to extract the ionic and electronic structure
       std::string cname((const char*)tcur->name);
       if (cname == WaveFunctionComponentBuilder::detset_tag || cname == "sposet_builder")
       {
+        //qp = ptclPool->createInterfaceParticleSet(tcur, qp);
         qp = ptclPool->createESParticleSet(tcur, target, qp);
       }
       tcur = tcur->next;
@@ -74,6 +74,7 @@ bool WaveFunctionPool::put(xmlNodePtr cur)
   {
     psiFactory = new WaveFunctionFactory(qp, ptclPool->getPool(), myComm);
     psiFactory->setName(id);
+    psiFactory->setInterface(spointerface);
     isPrimary  = (myPool.empty() || role == "primary");
     myPool[id] = psiFactory;
     app_summary() << " Wavefunction setup: " << std::endl;

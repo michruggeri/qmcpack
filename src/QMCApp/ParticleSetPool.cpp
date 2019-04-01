@@ -41,13 +41,16 @@ ParticleSetPool::ParticleSetPool(Communicate* c, const char* aname) : MPIObjectB
 
 ParticleSet* ParticleSetPool::getParticleSet(const std::string& pname)
 {
+  std::cerr << "asdasdasas\n";
   std::map<std::string, ParticleSet*>::iterator pit(myPool.find(pname));
   if (pit == myPool.end())
   {
+  std::cerr << "Yeah\n";
     return 0;
   }
   else
   {
+  std::cerr << "Nope\n";
     return (*pit).second;
   }
 }
@@ -240,6 +243,134 @@ void ParticleSetPool::reset()
     ++it;
   }
 }
+////////////////////
+ParticleSet* ParticleSetPool::createInterfaceParticleSet(xmlNodePtr cur, ParticleSet* qp)
+{
+  std::cout << "AAA\n";
+  if (myComm->rank()==0)
+  {
+    app_log()<<"===Initializing Particle Set===\n";
+  }
+  //TinyVector<int,OHMMS_DIM> tilefactor;
+  app_log()<<"xmlnodeptr "<<cur<<std::endl;
+  Tensor<int,OHMMS_DIM> tilematrix(0);
+  tilematrix.diagonal(1);
+  double lr_cut=15;
+  std::string inname;
+  std::string source("i");
+  std::string target("e");
+  std::string bc("p p p");
+  std::string spotype("0");
+  OhmmsAttributeSet attribs;
+  attribs.add(inname, "href");
+  attribs.add(tilematrix, "tilematrix");
+  attribs.add(source, "source");
+  attribs.add(target, "target");
+  attribs.add(bc, "bconds");
+  attribs.add(lr_cut, "LR_dim_cutoff");
+  attribs.add(spotype, "type");
+
+  if(cur!=NULL) attribs.put(cur);
+
+  if(inname.empty()) return qp;
+
+#if OHMMS_DIM==3
+  ParticleSet* ions=getParticleSet(source);
+  if(ions==0)
+  {
+    ions=new MCWalkerConfiguration;
+
+    ions->setName(source);
+    //set the boundary condition
+    ions->Lattice.LR_dim_cutoff=lr_cut;
+    std::istringstream  is(bc);
+    char c;
+    int idim=0;
+    while(!is.eof() && idim<OHMMS_DIM)
+    {
+      if(is>>c)
+        ions->Lattice.BoxBConds[idim++]=(c=='p');
+    }
+    //initialize particle set from interface.  
+    myComm->barrier();
+    app_log()<<"ION interface->getParticleSet()\n";
+    interface->getParticleSet(*ions);
+    myComm->barrier();
+    std::cout<<"ION interface->bcastParticleSet() myComm rank()="<<myComm->rank()<<" size()="<<myComm->size()<<std::endl;
+    interface->bcastParticleSet(*ions);
+    myComm->barrier();
+    app_log()<<"ION interface---done with bcastParticleSet()\n";
+    
+    //expandSuperCell(*ions,tilematrix);
+    myComm->barrier();
+    app_log()<<"ION expanded supercell rank="<<myComm->rank()<<std::endl;
+    ions->resetGroups();
+    myComm->barrier();
+    app_log()<<"ION resetGroups rank="<<myComm->rank()<<std::endl;
+    ions->createSK();
+    myComm->barrier();
+    app_log()<<"ION created SK rank="<<myComm->rank()<<std::endl;
+
+    //failed to initialize the ions
+    if(ions->getTotalNum() == 0)
+      return 0;
+    typedef ParticleSet::SingleParticleIndex_t SingleParticleIndex_t;
+    app_log()<<"make grid\n";
+    std::vector<SingleParticleIndex_t> grid(OHMMS_DIM,SingleParticleIndex_t(1));
+    app_log()<<"make reset\n";
+    ions->Lattice.reset();
+    app_log()<<"make real grid\n";
+    ions->Lattice.makeGrid(grid);
+
+    myPool[source]=ions;
+  }
+
+  if(SimulationCell==0)
+  {
+    SimulationCell = new ParticleSet::ParticleLayout_t(ions->Lattice);
+  }
+
+  if(qp==0)
+
+ {
+    //create the electrons
+    qp = new MCWalkerConfiguration;
+    qp->setName(target);
+    qp->Lattice.copy(ions->Lattice);
+
+    app_log() << "  Simulation cell radius = " << qp->Lattice.SimulationCellRadius << std::endl;
+    app_log() << "  Wigner-Seitz    radius = " << qp->Lattice.WignerSeitzRadius    << std::endl;
+    SimulationCell->print(app_log());
+
+    app_log()<<"\n ===NOTE:  Electrons are automatically initialized from the interface===\n";
+    // Goback to the // and OhmmsXPathObject handles it internally
+    myComm->barrier();
+    interface->getElectronParticleSet(*qp);
+    std::cout<<"interface->ELECTRONbcastParticleSet() myComm rank()="<<myComm->rank()<<" size()="<<myComm->size()<<std::endl;
+    myComm->barrier();
+    interface->bcastParticleSet(*qp);
+    myComm->barrier();
+    qp->setName(target);
+
+    if (qp->Lattice.SuperCellEnum != SUPERCELL_BULK)
+    {
+      //assign non-trivial positions for the quanmtum particles
+      InitMolecularSystem mole(this);
+      mole.initMolecule(ions,qp);
+      qp->R.setUnit(PosUnit::CartesianUnit);
+    }
+    //for(int i=0; i<qp->getTotalNum(); ++i)
+    //  cout << qp->GroupID[i] << " " << qp->R[i] << endl;
+    if(qp->Lattice.SuperCellEnum)
+      qp->createSK();
+    qp->resetGroups();
+    myPool[target]=qp;
+  }
+#endif
+  return qp;
+}
+               
+/////////////////////////
 
 /** Create particlesets from ES-HDF file
  */
@@ -261,10 +392,10 @@ ParticleSet* ParticleSetPool::createESParticleSet(xmlNodePtr cur, const std::str
   attribs.add(lr_cut, "LR_dim_cutoff");
   attribs.add(spotype, "type");
   attribs.put(cur);
+//  if (h5name.empty())
+//    return qp;
 
-  if (h5name.empty())
-    return qp;
-
+std::cerr<< "I guess I am here\n";
 #if OHMMS_DIM == 3
   ParticleSet* ions = getParticleSet(source);
   if (ions == 0)

@@ -5,6 +5,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 
+#include <iostream>
 class Communicate;
 
 namespace qmcplusplus

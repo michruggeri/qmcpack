@@ -829,13 +829,14 @@ EinsplineSetBuilder::ReadBands
 }
 #endif
 
+/********
  //!!!!!!!!!!!!!!!!
- /*
+ /
  Here there is all the experimental stuff for the hdf5 interface for the current version of qmcpack;
  most of it is taken from the old ion_mover, especially from the ReadOrbitalInfo in EinsplineSetBuilder_Interface.cpp;
  for the moment everything is dumbly locally defined; when (if?) everthing works all the inclusions & references 
  are to be fixed!
- */
+ /
 bool
  EinsplineSetBuilder::ReadOrbitalInfo_Interface()
  {
@@ -874,8 +875,8 @@ bool
              Lattice(0,0), Lattice(0,1), Lattice(0,2),
              Lattice(1,0), Lattice(1,1), Lattice(1,2),
              Lattice(2,0), Lattice(2,1), Lattice(2,2));
-   app_log() << buff;
    OHMMS::Controller->barrier();
+   app_log() << buff;
    snprintf (buff, 1000,
              "  SuperLattice = \n    [ %9.6f %9.6f %9.6f\n"
              "      %9.6f %9.6f %9.6f\n"
@@ -1314,6 +1315,6 @@ void EinsplineSetBuilder::OccupyBands_Interface(int spin, int sortBands, int num
             << NumValenceOrbs << " valence states.\n";
 }
 
-
+**************/
 }
 

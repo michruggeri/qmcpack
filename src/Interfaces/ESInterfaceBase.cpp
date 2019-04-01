@@ -135,7 +135,6 @@ void ESInterfaceBase::getParticleSet(ParticleSet & P)
   Vector<int> speciesCharge(0);
   getSpeciesData(atomicNumbers,speciesCharge,speciesMass,speciesNames);
   int nspecies=atomicNumbers.size();
-    
   //add charge
   //atomic_number is optional
   for(int i=0; i<nspecies; ++i)
