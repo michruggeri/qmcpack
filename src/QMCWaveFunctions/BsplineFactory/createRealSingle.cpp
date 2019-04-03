@@ -13,14 +13,17 @@
 #include "QMCWaveFunctions/BsplineFactory/createBsplineReader.h"
 #include <Utilities/ProgressReportEngine.h>
 #include "QMCWaveFunctions/EinsplineSetBuilder.h"
+#include "QMCWaveFunctions/EinsplineSetBuilderInterface.h"
 #include "QMCWaveFunctions/BsplineFactory/BsplineSet.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineR2RAdoptor.h"
 #include "QMCWaveFunctions/BsplineFactory/HybridRealAdoptor.h"
 #include <fftw3.h>
 #include <QMCWaveFunctions/einspline_helper.hpp>
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderBase.h"
+#include "QMCWaveFunctions/BsplineFactory/BsplineReaderInterface.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderP.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineHybridAdoptorReaderP.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderPInterface.h"
 
 namespace qmcplusplus
 {
@@ -32,6 +35,13 @@ BsplineReaderBase* createBsplineRealSingle(EinsplineSetBuilder* e, bool hybrid_r
     aReader = new SplineHybridAdoptorReader<HybridRealSoA<SplineR2RSoA<float, OHMMS_PRECISION>>>(e);
   else
     aReader = new SplineAdoptorReader<SplineR2RSoA<float, OHMMS_PRECISION>>(e);
+  return aReader;
+}
+BsplineReaderInterface* createBsplineRealSingle(EinsplineSetBuilderInterface* e, bool hybrid_rep, const std::string& useGPU)
+{
+  BsplineReaderInterface* aReader = nullptr;
+
+  aReader = new SplineAdoptorReaderInterface<SplineR2RSoA<float, OHMMS_PRECISION>>(e);
   return aReader;
 }
 } // namespace qmcplusplus

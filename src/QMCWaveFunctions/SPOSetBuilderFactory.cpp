@@ -33,6 +33,7 @@
 
 #if defined(HAVE_EINSPLINE)
 #include "QMCWaveFunctions/EinsplineSetBuilder.h"
+#include "QMCWaveFunctions/EinsplineSetBuilderInterface.h"
 #endif
 #endif
 #include "QMCWaveFunctions/CompositeSPOSet.h"
@@ -41,7 +42,6 @@
 #include "Utilities/IteratorUtility.h"
 #include "OhmmsData/AttributeSet.h"
 #include "Message/MPIObjectBase.h"
-
 
 namespace qmcplusplus
 {
@@ -205,6 +205,18 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
     PRE.error("Einspline is missing for B-spline orbitals",true);
 #endif
   }
+///////////////////
+  else if(type.find("interface")<type.size())
+  {
+    name=type_in;
+#if defined(HAVE_EINSPLINE)
+    PRE << "EinsplineSetBuilder:  using libeinspline for B-spline orbitals.\n";
+    bb = new EinsplineSetBuilderInterface(targetPtcl, ptclPool, myComm, rootNode);
+#else
+    PRE.error("Einspline is missing for B-spline orbitals",true);
+#endif
+  }
+///////////////////
   else if(type == "molecularorbital" || type == "mo")
   {
     ParticleSet* ions=0;

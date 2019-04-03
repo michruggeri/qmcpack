@@ -16,12 +16,12 @@
 //////////////////////////////////////////////////////////////////////////////////////
     
     
-/** @file EinsplineSetBuilder.h
+/** @file EinsplineSetBuilderInterface.h
  *
  * Builder class for einspline-based SPOSet objects.
  */
-#ifndef QMCPLUSPLUS_EINSPLINE_SET_BUILDER_H
-#define QMCPLUSPLUS_EINSPLINE_SET_BUILDER_H
+#ifndef QMCPLUSPLUS_EINSPLINE_SET_BUILDER_INTERFACE_H
+#define QMCPLUSPLUS_EINSPLINE_SET_BUILDER_INTERFACE_H
 
 #include "QMCWaveFunctions/SPOSetBuilder.h"
 #include "QMCWaveFunctions/BandInfo.h"
@@ -30,13 +30,22 @@
 #include "Numerics/HDFNumericAttrib.h"
 #include <map>
 
+//!!!!!!!!!!!!!!!!
+#include "Interfaces/ESHDF5/ESHDF5Interface.h"
+#include "Interfaces/ESInterfaceBase.h"
+#include "Interfaces/InterfaceBuilder.h"
+// For definition of h5orbset and declaration of BSplineReaderBase:
+#include "QMCWaveFunctions/EinsplineSetBuilder.h"
+//!!!!!!!!!!!!!!!!
+
 #define PW_COEFF_NORM_TOLERANCE 1e-6
 
 class Communicate;
 
 namespace qmcplusplus
 {
-
+class BsplineReaderInterface;  
+/*
 ///forward declaration of BsplineReaderBase
 class BsplineReaderBase;
 
@@ -75,11 +84,12 @@ struct Int4less
     return false;
   }
 };
-
+*/
 
 /** construct a name for spline SPO set
  */
-struct H5OrbSet
+//struct H5OrbSet;
+/*
 {
   ///type of orbitals defined
   int OrbitalType;
@@ -89,13 +99,13 @@ struct H5OrbSet
   int NumOrbs;
   ///name of the HDF5 file
   std::string FileName;
-  /** true if a < b
+  ** true if a < b
    *
    * The ordering
    * - name
    * - spin set
    * - number of orbitals
-   */
+   *
   bool operator()(const H5OrbSet &a, const H5OrbSet &b) const
   {
     if (a.FileName == b.FileName)
@@ -118,10 +128,12 @@ struct H5OrbSet
   H5OrbSet()
   { }
 };
+*/
+///////////
 
-/** EinsplineSet builder
+/** EinsplineSet builder interface
  */
-class EinsplineSetBuilder : public SPOSetBuilder
+class EinsplineSetBuilderInterface : public SPOSetBuilder
 {
 public:
 
@@ -143,7 +155,7 @@ public:
   std::vector<std::vector<BandInfo>*> FullBands;
 
   /// reader to use BsplineReaderBase
-  BsplineReaderBase *MixedSplineReader;
+  BsplineReaderInterface *MixedSplineReader;  
 
   ///This is true if we have the orbital derivatives w.r.t. the ion positions
   bool HaveOrbDerivs;
@@ -155,12 +167,11 @@ public:
   ////static std::map<H5OrbSet,EinsplineSetExtended<double>*,H5OrbSet> ExtendedSetMap_d;
   //static std::map<H5OrbSet,SPOSet*,H5OrbSet> SPOSetMap;
   std::map<H5OrbSet,SPOSet*,H5OrbSet> SPOSetMap;
-
   ///constructor
-  EinsplineSetBuilder(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur);
+  EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur);
 
   ///destructor
-  ~EinsplineSetBuilder();
+  ~EinsplineSetBuilderInterface();
 
   /** initialize the Antisymmetric wave function for electrons
    * @param cur the current xml node
@@ -172,9 +183,9 @@ public:
    */
   void set_metadata(int numOrbs, int TwistNum_inp);
 
-  /** initialize with the existing SPOSet */
+  /** initialize with the existing SPOSet *
   SPOSet* createSPOSet(xmlNodePtr cur,SPOSetInputInfo& input_info);
-
+*/
   //////////////////////////////////////
   // HDF5-related data  and functions //
   //////////////////////////////////////
@@ -187,8 +198,10 @@ public:
   std::string parameterGroup, ionsGroup, eigenstatesGroup;
   std::vector<int> Occ;
   bool HasCoreOrbs;
-  bool ReadOrbitalInfo ();
-  bool ReadOrbitalInfo_ESHDF ();
+
+/////////
+bool ReadOrbitalInfo();
+////////
   void BroadcastOrbitalInfo();
   bool CheckLattice();
 
@@ -227,7 +240,8 @@ public:
   //Array<std::complex<double>,3> FFTbox;
 
   Vector<int> IonTypes;
-  Vector<TinyVector<double,OHMMS_DIM> > IonPos;
+  ParticleSet::ParticlePos_t IonPos;   // Changed the type; I think this is fine
+  //Vector<TinyVector<double,OHMMS_DIM> > IonPos;
   // mapping the ions in the supercell to the primitive cell
   std::vector<int> Super2Prim;
 
@@ -262,8 +276,9 @@ public:
   //void AnalyzeTwists();
   void AnalyzeTwists2();
   void TileIons();
+
   void OccupyBands(int spin, int sortBands, int numOrbs);
-  void OccupyBands_ESHDF(int spin, int sortBands, int numOrbs);
+  //bool ReadOrbitalInfo();
 
 #if 0
   void ReadBands      (int spin, EinsplineSetExtended<std::complex<double> >* orbitalSet);
@@ -314,9 +329,9 @@ public:
 
   // This returns the path in the HDF5 file to the group for orbital
   // with twist ti and band bi
-  std::string OrbitalPath   (int ti, int bi);
-  std::string CoreStatePath (int ti, int bi);
-  std::string MuffinTinPath (int ti, int bi, int tin);
+//  std::string OrbitalPath   (int ti, int bi);
+//  std::string CoreStatePath (int ti, int bi);
+//  std::string MuffinTinPath (int ti, int bi, int tin);
 
   /////////////////////////////////////////////////////////////
   // Information to avoid storing the same orbitals twice in //
@@ -348,9 +363,9 @@ public:
   }
   //inline void update_token(const char* f, int l, const char* msg) 
   //{}
+
 };
 
 }
-
 
 #endif

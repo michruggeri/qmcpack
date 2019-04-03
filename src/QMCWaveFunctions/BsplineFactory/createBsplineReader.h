@@ -19,27 +19,33 @@ namespace qmcplusplus
 {
 ///forward declaration
 struct BsplineReaderBase;
+struct BsplineReaderInterface;
 struct EinsplineSetBuilder;
+struct EinsplineSetBuilderInterface;
 
 /** create a reader which handles complex (double size real) splines, C2R or C2C case
  *  spline storage and computation precision is double
  */
 BsplineReaderBase* createBsplineComplexDouble(EinsplineSetBuilder* e, bool hybrid_rep, const std::string& useGPU);
+BsplineReaderInterface* createBsplineComplexDouble(EinsplineSetBuilderInterface* e, bool hybrid_rep, const std::string& useGPU);
 
 /** create a reader which handles complex (double size real) splines, C2R or C2C case
  *  spline storage and computation precision is float
  */
 BsplineReaderBase* createBsplineComplexSingle(EinsplineSetBuilder* e, bool hybrid_rep, const std::string& useGPU);
+BsplineReaderInterface* createBsplineComplexSingle(EinsplineSetBuilderInterface* e, bool hybrid_rep, const std::string& useGPU);
 
 /** create a reader which handles real splines, R2R case
  *  spline storage and computation precision is double
  */
 BsplineReaderBase* createBsplineRealDouble(EinsplineSetBuilder* e, bool hybrid_rep, const std::string& useGPU);
+BsplineReaderInterface* createBsplineRealDouble(EinsplineSetBuilderInterface* e, bool hybrid_rep, const std::string& useGPU);
 
 /** create a reader which handles real splines, R2R case
  *  spline storage and computation precision is float
  */
 BsplineReaderBase* createBsplineRealSingle(EinsplineSetBuilder* e, bool hybrid_rep, const std::string& useGPU);
+BsplineReaderInterface* createBsplineRealSingle(EinsplineSetBuilderInterface* e, bool hybrid_rep, const std::string& useGPU);
 
 } // namespace qmcplusplus
 #endif

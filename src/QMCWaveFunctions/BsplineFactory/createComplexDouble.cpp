@@ -15,6 +15,7 @@
 #include "simd/vmath.hpp"
 #include <Utilities/ProgressReportEngine.h>
 #include "QMCWaveFunctions/EinsplineSetBuilder.h"
+#include "QMCWaveFunctions/EinsplineSetBuilderInterface.h"
 #include "QMCWaveFunctions/BsplineFactory/BsplineSet.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineC2RAdoptor.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineC2CAdoptor.h"
@@ -25,8 +26,10 @@
 #include <fftw3.h>
 #include <QMCWaveFunctions/einspline_helper.hpp>
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderBase.h"
+#include "QMCWaveFunctions/BsplineFactory/BsplineReaderInterface.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderP.h"
 #include "QMCWaveFunctions/BsplineFactory/SplineHybridAdoptorReaderP.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderPInterface.h"
 
 namespace qmcplusplus
 {
@@ -54,6 +57,19 @@ BsplineReaderBase* createBsplineComplexDouble(EinsplineSetBuilder* e, bool hybri
     else
       aReader = new SplineAdoptorReader<SplineC2RSoA<double, RealType>>(e);
   }
+#endif
+
+  return aReader;
+}
+BsplineReaderInterface* createBsplineComplexDouble(EinsplineSetBuilderInterface* e, bool hybrid_rep, const std::string& useGPU)
+{
+  typedef OHMMS_PRECISION RealType;
+  BsplineReaderInterface* aReader = nullptr;
+
+#if defined(QMC_COMPLEX)
+    aReader = new SplineAdoptorReaderInterface<SplineC2CSoA<double, RealType>>(e);
+#else //QMC_COMPLEX
+    aReader = new SplineAdoptorReaderInterface<SplineC2RSoA<double, RealType>>(e);
 #endif
 
   return aReader;
