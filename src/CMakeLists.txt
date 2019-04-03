@@ -357,6 +357,7 @@ ENDIF()
     SUBDIRS(QMCApp/tests)
     SUBDIRS(Message/tests)
     SUBDIRS(OpenMP/tests)
+    SUBDIRS(Optimize/tests)
   endif() #}
 
 endif() #}}}
