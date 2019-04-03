@@ -284,6 +284,7 @@ struct SplineHybridAdoptorReader : public SplineAdoptorReader<SA>
 
     // prepare Gvecs Ylm(G)
     typedef typename EinsplineSetBuilder::UnitCellType UnitCellType;
+    typedef typename EinsplineSetBuilderInterface::UnitCellType UnitCellType;
     Gvectors<double, UnitCellType> Gvecs(mybuilder->Gvecs[0], mybuilder->PrimCell, bspline->HalfG, gvec_first,
                                          gvec_last);
     // if(band_group_comm.isGroupLeader()) std::cout << "print band=" << iorb << " KE=" << Gvecs.evaluate_KE(cG) << std::endl;
