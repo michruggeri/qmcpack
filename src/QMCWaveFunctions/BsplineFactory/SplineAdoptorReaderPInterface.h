@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 
-/** @file SplineAdoptorReader.h
+/** @file SplineAdoptorReaderInterface.h
  *
  * The most general reader class for SplineAdoptor using the full single grid for the supercell
  * - SplineR2RAdoptor
@@ -215,7 +215,8 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
           spline_i = einspline::create(spline_i, start, end, MeshSize, bspline->HalfG);
 
         now.restart();
-        initialize_spline_pio_gather(spin, bandgroup);
+        initialize_spline_slow(spin, bandgroup);
+        //initialize_spline_pio_gather(spin, bandgroup);
         app_log() << "  SplineAdoptorReader initialize_spline_pio " << now.elapsed() << " sec" << std::endl;
 
         fftw_destroy_plan(FFTplan);
@@ -366,6 +367,31 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       bspline->set_spline(spline_r, spline_i, cur_bands[iorb].TwistIndex, iorb, 0);
     }
   }
+
+void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
+  {
+    int N=bandgroup.getNumDistinctOrbitals();
+    Vector<std::complex<double> > cG(mybuilder->MaxNumGvecs);
+    const std::vector<BandInfo>& cur_bands=bandgroup.myBands;
+    hdf_archive h5f(myComm, false);
+    h5f.open(mybuilder->H5FileName, H5F_ACC_RDONLY);
+    //this will be parallelized with OpenMP
+    for(int iorb=0; iorb<N; ++iorb)
+    {
+      int iorb_h5   = bspline->BandIndexMap[iorb];
+      int ti        = cur_bands[iorb_h5].TwistIndex;
+      std::string s = psi_g_path(ti, spin, cur_bands[iorb_h5].BandIndex);
+      if (!h5f.readEntry(cG, s))
+        APP_ABORT("SplineAdoptorReader Failed to read band(s) from h5!\n");
+      //fft_spline(cG,ti,0);
+      //bspline->set_spline(spline_r[0],spline_i[0],iorb);
+      fft_spline(cG, ti);
+
+      bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
+    }
+  }
+
+
 };
 } // namespace qmcplusplus
 #endif
