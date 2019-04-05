@@ -271,7 +271,6 @@ EinsplineSetBuilderInterface::CheckLattice()
 {
   update_token(__FILE__,__LINE__,"CheckLattice");
 
-  std::cerr << SuperLattice(0,0) << "\t" << SuperLattice(0,1) << "\t" << SuperLattice(0,2) << std::endl;
   double diff=0.0;
   for (int i=0; i<OHMMS_DIM; i++)
     for (int j=0; j<OHMMS_DIM; j++)
@@ -354,7 +353,7 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
   app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
-  myComm->barrier();
+//  myComm->barrier();
   orb_info_timer.restart();
   BroadcastOrbitalInfo();
 
@@ -774,8 +773,8 @@ bool
    esinterface.getPrimVecs(Lattice);
    std::cerr << "  Done!\n";
  
-   OHMMS::Controller->barrier();
-   std::cerr << "Barrier: seems to be working\n";
+//   OHMMS::Controller->barrier();
+//   std::cerr << "Barrier: seems to be working\n";
 
    for(int i=0;i<3;i++)
      for(int j=0;j<3;j++)
@@ -791,7 +790,7 @@ bool
              Lattice(0,0), Lattice(0,1), Lattice(0,2),
              Lattice(1,0), Lattice(1,1), Lattice(1,2),
              Lattice(2,0), Lattice(2,1), Lattice(2,2));
-   OHMMS::Controller->barrier();
+//   OHMMS::Controller->barrier();
    app_log() << buff;
    snprintf (buff, 1000,
              "  SuperLattice = \n    [ %9.6f %9.6f %9.6f\n"
@@ -801,7 +800,7 @@ bool
              SuperLattice(1,0), SuperLattice(1,1), SuperLattice(1,2),
              SuperLattice(2,0), SuperLattice(2,1), SuperLattice(2,2));
    CheckLattice();
-   OHMMS::Controller->barrier();
+//   OHMMS::Controller->barrier();
 
    app_log() << buff;
    for (int i=0; i<3; i++)
@@ -812,7 +811,7 @@ bool
    NumCoreStates = NumMuffinTins = NumTwists = NumSpins = NumBands = NumAtomicOrbitals = 0;
    NumElectrons=TargetPtcl.getTotalNum();
 
-   OHMMS::Controller->barrier();
+//   OHMMS::Controller->barrier();
 
    NumBands          = esinterface.getNumBands();
    NumSpins          = esinterface.getNumSpins();

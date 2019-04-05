@@ -41,16 +41,13 @@ ParticleSetPool::ParticleSetPool(Communicate* c, const char* aname) : MPIObjectB
 
 ParticleSet* ParticleSetPool::getParticleSet(const std::string& pname)
 {
-  std::cerr << "asdasdasas\n";
   std::map<std::string, ParticleSet*>::iterator pit(myPool.find(pname));
   if (pit == myPool.end())
   {
-  std::cerr << "Yeah\n";
     return 0;
   }
   else
   {
-  std::cerr << "Nope\n";
     return (*pit).second;
   }
 }
@@ -395,7 +392,6 @@ ParticleSet* ParticleSetPool::createESParticleSet(xmlNodePtr cur, const std::str
 //  if (h5name.empty())
 //    return qp;
 
-std::cerr<< "I guess I am here\n";
 #if OHMMS_DIM == 3
   ParticleSet* ions = getParticleSet(source);
   if (ions == 0)

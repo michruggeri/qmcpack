@@ -485,9 +485,7 @@ bool QMCMain::validateXML()
     intfcbuilder = new InterfaceBuilder(myComm);
     intfcbuilder->put(intfc[0]);
     intfcbuilder->initialize();
-    std::cerr << "check... ";
     intfcbuilder->getPtclInterface();
-    std::cerr << "OK!\n";
 
     /// Now to update the wfn pool and ptcl set pool.  
     ptclPool->setInterface(intfcbuilder->getPtclInterface());
