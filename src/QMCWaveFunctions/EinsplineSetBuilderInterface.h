@@ -157,6 +157,8 @@ public:
   /// reader to use BsplineReaderBase
   BsplineReaderInterface *MixedSplineReader;  
 
+  ///Pointer to IO interface
+  ESInterfaceBase* esinterface;
   ///This is true if we have the orbital derivatives w.r.t. the ion positions
   bool HaveOrbDerivs;
   ///root XML node with href, sort, tilematrix, twistnum, source, precision,truncate,version
@@ -183,6 +185,7 @@ public:
    */
   void set_metadata(int numOrbs, int TwistNum_inp);
 
+  ESInterfaceBase* get_interface(){return esinterface;};
   /** initialize with the existing SPOSet *
   SPOSet* createSPOSet(xmlNodePtr cur,SPOSetInputInfo& input_info);
 */
@@ -199,9 +202,9 @@ public:
   std::vector<int> Occ;
   bool HasCoreOrbs;
 
-/////////
-bool ReadOrbitalInfo();
-////////
+  /////////
+  bool ReadOrbitalInfo();
+  ////////
   void BroadcastOrbitalInfo();
   bool CheckLattice();
 

@@ -13,7 +13,7 @@
 // File created by: Ken Esler, kpesler@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 #include "qmc_common.h"
-   
+
 #include "Particle/DistanceTable.h"
 #include "OhmmsData/AttributeSet.h"
 #include "Utilities/Timer.h"
@@ -38,19 +38,20 @@ namespace qmcplusplus
 // Constructor (from EinsplineSetBuilderCommon.cpp)
 
 EinsplineSetBuilderInterface::EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur)
-  : SPOSetBuilder(comm), TargetPtcl(p),ParticleSets(psets), MixedSplineReader(0), XMLRoot(cur), Format(QMCPACK),
-  TileFactor(1,1,1), TwistNum(0), LastSpinSet(-1),
-  NumOrbitalsRead(-1), NumMuffinTins(0), NumCoreStates(0),
-  NumBands(0), NumElectrons(0), NumSpins(0), NumTwists(0),
-  H5FileID(-1), makeRotations(false), MeshFactor(1.0), MeshSize(0,0,0)
+: SPOSetBuilder(comm), TargetPtcl(p),ParticleSets(psets), MixedSplineReader(0), XMLRoot(cur), Format(QMCPACK),
+TileFactor(1,1,1), TwistNum(0), LastSpinSet(-1),
+NumOrbitalsRead(-1), NumMuffinTins(0), NumCoreStates(0),
+NumBands(0), NumElectrons(0), NumSpins(0), NumTwists(0),
+H5FileID(-1), makeRotations(false), MeshFactor(1.0), MeshSize(0,0,0),
+esinterface(0)
 {
   //assume one, not safe!! 
   myTableIndex=1;
 
   MatchingTol=10*std::numeric_limits<float>::epsilon();
   for (int i=0; i<3; i++)
-    for (int j=0; j<3; j++)
-      TileMatrix(i,j) = 0;
+  for (int j=0; j<3; j++)
+  TileMatrix(i,j) = 0;
   MyToken=0;
 
   //invalidate states by the basis class
@@ -60,653 +61,662 @@ EinsplineSetBuilderInterface::EinsplineSetBuilderInterface(ParticleSet& p, PtclP
 
   //create vectors with nullptr
   FullBands.resize(p.groups(),0);
+
+  //HACK HACK HACK
+  //For interface debugging.
+  //Proper construction of interface should be done in some put(xml) command,
+  //and input file should be parsed.
+  ESHDF5Interface* myint;
+  myint = new ESHDF5Interface;
+  esinterface=static_cast<ESInterfaceBase*>(myint);
+  esinterface->initialize();
 }
 
 template<typename T>
 inline TinyVector<T,3>
 IntPart (const TinyVector<T,3>& twist)
 {
-  return TinyVector<T,3> (round(twist[0]-1.0e-6),
-                          round(twist[1]-1.0e-6),
-                          round(twist[2]-1.0e-6));
+return TinyVector<T,3> (round(twist[0]-1.0e-6),
+		  round(twist[1]-1.0e-6),
+		  round(twist[2]-1.0e-6));
 }
 
 template<typename T>
 inline TinyVector<T,3>
 FracPart (const TinyVector<T,3>& twist)
 {
-  return twist - IntPart (twist);
+return twist - IntPart (twist);
 }
 // Destructor (from EinsplineSetBuilderCommon.cpp)
 
 EinsplineSetBuilderInterface::~EinsplineSetBuilderInterface()
 {
-  DEBUG_MEMORY("EinsplineSetBuilderInterface::~EinsplineSetBuilderInterface");
-  if(MixedSplineReader) delete MixedSplineReader;
-  if(H5FileID>=0)
-    H5Fclose(H5FileID);
+DEBUG_MEMORY("EinsplineSetBuilderInterface::~EinsplineSetBuilderInterface");
+if(MixedSplineReader) delete MixedSplineReader;
+if(H5FileID>=0)
+H5Fclose(H5FileID);
 }
 
 void
 EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
 {
-  if(myComm->size() == 1)
-    return;
-  int numIons = IonTypes.size();
-  int numAtomicOrbitals = AtomicOrbitals.size();
-  int numDensityGvecs = TargetPtcl.DensityReducedGvecs.size();
-  PooledData<double> abuffer;
-  PooledData<int>       aibuffer;
-  aibuffer.add(Version.begin(),Version.end()); //myComm->bcast(Version);
-  aibuffer.add(Format);
-  abuffer.add(Lattice.begin(),Lattice.end());//myComm->bcast(Lattice);
-  abuffer.add(RecipLattice.begin(),RecipLattice.end()); //myComm->bcast(RecipLattice);
-  abuffer.add(SuperLattice.begin(),SuperLattice.end()); //myComm->bcast(SuperLattice);
-  abuffer.add(LatticeInv.begin(),LatticeInv.end()); //myComm->bcast(LatticeInv);
-  aibuffer.add(NumBands); //myComm->bcast(NumBands);
-  aibuffer.add(NumElectrons); //myComm->bcast(NumElectrons);
-  aibuffer.add(NumSpins); //myComm->bcast(NumSpins);
-  aibuffer.add(NumTwists); //myComm->bcast(NumTwists);
-  aibuffer.add(numIons); //myComm->bcast(numIons);
-  aibuffer.add(NumMuffinTins);
-  aibuffer.add(numAtomicOrbitals);
-  aibuffer.add(numDensityGvecs);
-  aibuffer.add(HaveOrbDerivs);
-  myComm->bcast(abuffer);
-  myComm->bcast(aibuffer);
-  if(myComm->rank())
-  {
-    abuffer.rewind();
-    aibuffer.rewind();
-    aibuffer.get(Version.begin(),Version.end());
-    aibuffer.get(Format);
-    abuffer.get(Lattice.begin(),Lattice.end());
-    abuffer.get(RecipLattice.begin(),RecipLattice.end());
-    abuffer.get(SuperLattice.begin(),SuperLattice.end());
-    abuffer.get(LatticeInv.begin(),LatticeInv.end());
-    aibuffer.get(NumBands);
-    aibuffer.get(NumElectrons);
-    aibuffer.get(NumSpins);
-    aibuffer.get(NumTwists);
-    aibuffer.get(numIons);
-    aibuffer.get(NumMuffinTins);
-    aibuffer.get(numAtomicOrbitals);
-    aibuffer.get(numDensityGvecs);
-    aibuffer.get(HaveOrbDerivs);
-    MT_APW_radii.resize(NumMuffinTins);
-    MT_APW_lmax.resize(NumMuffinTins);
-    MT_APW_rgrids.resize(NumMuffinTins);
-    MT_APW_num_radial_points.resize(NumMuffinTins);
-    MT_centers.resize(NumMuffinTins);
-    TargetPtcl.DensityReducedGvecs.resize(numDensityGvecs);
-    TargetPtcl.Density_G.resize(numDensityGvecs);
-    AtomicOrbitals.resize(numAtomicOrbitals);
-  }
-  std::vector<int> rgrids_sizes(NumMuffinTins);
-  for (int tin=0; tin<NumMuffinTins; tin++)
-    rgrids_sizes[tin] = MT_APW_rgrids[tin].size();
-  myComm->bcast(rgrids_sizes);
-  if (myComm->rank())
-    for (int tin=0; tin<NumMuffinTins; tin++)
-      MT_APW_rgrids[tin].resize(rgrids_sizes[tin]);
-  if (IonTypes.size() != numIons)
-  {
-    IonTypes.resize(numIons);
-    IonPos.resize(numIons);
-  }
-  //new buffer
-  PooledData<double> bbuffer;
-  PooledData<int> bibuffer;
-  for(int i=0; i<numIons; ++i)
-    bibuffer.add(IonTypes[i]);
-  //myComm->bcast(IonTypes);
-  bbuffer.add(&IonPos[0][0],&IonPos[0][0]+OHMMS_DIM*numIons);
-  //myComm->bcast(IonPos);
-  if (TwistAngles.size() != NumTwists)
-    TwistAngles.resize(NumTwists);
-  bbuffer.add(&TwistAngles[0][0],&TwistAngles[0][0]+OHMMS_DIM*NumTwists);
-  //myComm->bcast(TwistAngles);
-  if (TwistSymmetry.size() != NumTwists)
-    TwistSymmetry.resize(NumTwists);
-  bibuffer.add(&TwistSymmetry[0],&TwistSymmetry[0]+NumTwists);
-  if (TwistWeight.size() != NumTwists)
-    TwistWeight.resize(NumTwists);
-  bibuffer.add(&TwistWeight[0],&TwistWeight[0]+NumTwists);
-  bbuffer.add(MT_APW_radii.begin(), MT_APW_radii.end());
-  bibuffer.add(MT_APW_lmax.begin(),  MT_APW_lmax.end());
-  bibuffer.add(MT_APW_num_radial_points.begin(),
-               MT_APW_num_radial_points.end());
-  bbuffer.add(&(MT_centers[0][0]), &(MT_centers[0][0])+OHMMS_DIM*NumMuffinTins);
-  for (int i=0; i<NumMuffinTins; i++)
-    bbuffer.add(MT_APW_rgrids[i].begin(), MT_APW_rgrids[i].end());
-  bibuffer.add(&(TargetPtcl.DensityReducedGvecs[0][0]),
-               &(TargetPtcl.DensityReducedGvecs[0][0])+numDensityGvecs*OHMMS_DIM);
-  bbuffer.add(&(TargetPtcl.Density_G[0]),
-              &(TargetPtcl.Density_G[0]) + numDensityGvecs);
-  for (int iat=0; iat<numAtomicOrbitals; iat++)
-  {
-    AtomicOrbital<std::complex<double> > &orb = AtomicOrbitals[iat];
-    bibuffer.add (orb.SplinePoints);
-    bibuffer.add (orb.PolyOrder);
-    bibuffer.add (orb.lMax);
-    bibuffer.add (orb.Numlm);
-    bbuffer.add  (&orb.Pos[0], &orb.Pos[0]+OHMMS_DIM);
-    bbuffer.add  (orb.CutoffRadius);
-    bbuffer.add  (orb.SplineRadius);
-    bbuffer.add  (orb.PolyRadius);
-  }
-  myComm->bcast(bbuffer);
-  myComm->bcast(bibuffer);
-  if(myComm->rank())
-  {
-    bbuffer.rewind();
-    bibuffer.rewind();
-    for(int i=0; i<numIons; ++i)
-      bibuffer.get(IonTypes[i]);
-    bbuffer.get(&IonPos[0][0],&IonPos[0][0]+OHMMS_DIM*numIons);
-    bbuffer.get(&TwistAngles[0][0],&TwistAngles[0][0]+OHMMS_DIM*NumTwists);
-    bibuffer.get(&TwistSymmetry[0],&TwistSymmetry[0]+NumTwists);
-    bibuffer.get(&TwistWeight[0],&TwistWeight[0]+NumTwists);
-    bbuffer.get(MT_APW_radii.begin(), MT_APW_radii.end());
-    bibuffer.get(MT_APW_lmax.begin(),  MT_APW_lmax.end());
-    bibuffer.get(MT_APW_num_radial_points.begin(),
-                 MT_APW_num_radial_points.end());
-    bbuffer.get(&(MT_centers[0][0]),
-                &(MT_centers[0][0])+OHMMS_DIM*NumMuffinTins);
-    for (int i=0; i<NumMuffinTins; i++)
-      bbuffer.get(MT_APW_rgrids[i].begin(), MT_APW_rgrids[i].end());
-    bibuffer.get(&(TargetPtcl.DensityReducedGvecs[0][0]),
-                 &(TargetPtcl.DensityReducedGvecs[0][0])+
-                 numDensityGvecs*OHMMS_DIM);
-    bbuffer.get(&(TargetPtcl.Density_G[0]),
-                &(TargetPtcl.Density_G[0]) + numDensityGvecs);
-    for (int iat=0; iat<numAtomicOrbitals; iat++)
-    {
-      AtomicOrbital<std::complex<double> > &orb = AtomicOrbitals[iat];
-      bibuffer.get (orb.SplinePoints);
-      bibuffer.get (orb.PolyOrder);
-      bibuffer.get (orb.lMax);
-      bibuffer.get (orb.Numlm);
-      bbuffer.get  (&orb.Pos[0], &orb.Pos[0]+OHMMS_DIM);
-      bbuffer.get  (orb.CutoffRadius);
-      bbuffer.get  (orb.SplineRadius);
-      bbuffer.get  (orb.PolyRadius);
-    }
-  }
-  //buffer to bcast hybrid representation atomic orbital info
-  PooledData<double> cbuffer;
-  PooledData<int> cibuffer;
-  myComm->bcast(cbuffer);
-  myComm->bcast(cibuffer);
-  AtomicCentersInfo.resize(numIons);
-  Super2Prim.resize(SourcePtcl->R.size());
-  cbuffer.add(AtomicCentersInfo.inner_cutoff.begin(), AtomicCentersInfo.inner_cutoff.end());
-  cbuffer.add(AtomicCentersInfo.non_overlapping_radius.begin(), AtomicCentersInfo.non_overlapping_radius.end());
-  cbuffer.add(AtomicCentersInfo.cutoff.begin(), AtomicCentersInfo.cutoff.end());
-  cbuffer.add(AtomicCentersInfo.spline_radius.begin(), AtomicCentersInfo.spline_radius.end());
-  cibuffer.add(Super2Prim.begin(),Super2Prim.end());
-  cibuffer.add(AtomicCentersInfo.lmax.begin(), AtomicCentersInfo.lmax.end());
-  cibuffer.add(AtomicCentersInfo.GroupID.begin(), AtomicCentersInfo.GroupID.end());
-  cibuffer.add(AtomicCentersInfo.spline_npoints.begin(), AtomicCentersInfo.spline_npoints.end());
-  myComm->bcast(cbuffer);
-  myComm->bcast(cibuffer);
-  if(myComm->rank())
-  {
-    cbuffer.rewind();
-    cibuffer.rewind();
-    cbuffer.get(AtomicCentersInfo.inner_cutoff.begin(), AtomicCentersInfo.inner_cutoff.end());
-    cbuffer.get(AtomicCentersInfo.non_overlapping_radius.begin(), AtomicCentersInfo.non_overlapping_radius.end());
-    cbuffer.get(AtomicCentersInfo.cutoff.begin(), AtomicCentersInfo.cutoff.end());
-    cbuffer.get(AtomicCentersInfo.spline_radius.begin(), AtomicCentersInfo.spline_radius.end());
-    cibuffer.get(Super2Prim.begin(),Super2Prim.end());
-    cibuffer.get(AtomicCentersInfo.lmax.begin(), AtomicCentersInfo.lmax.end());
-    cibuffer.get(AtomicCentersInfo.GroupID.begin(), AtomicCentersInfo.GroupID.end());
-    cibuffer.get(AtomicCentersInfo.spline_npoints.begin(), AtomicCentersInfo.spline_npoints.end());
-    for (int i=0; i<numIons; i++)
-      AtomicCentersInfo.ion_pos[i]=IonPos[i];
-  }
+if(myComm->size() == 1)
+return;
+int numIons = IonTypes.size();
+int numAtomicOrbitals = AtomicOrbitals.size();
+int numDensityGvecs = TargetPtcl.DensityReducedGvecs.size();
+PooledData<double> abuffer;
+PooledData<int>       aibuffer;
+aibuffer.add(Version.begin(),Version.end()); //myComm->bcast(Version);
+aibuffer.add(Format);
+abuffer.add(Lattice.begin(),Lattice.end());//myComm->bcast(Lattice);
+abuffer.add(RecipLattice.begin(),RecipLattice.end()); //myComm->bcast(RecipLattice);
+abuffer.add(SuperLattice.begin(),SuperLattice.end()); //myComm->bcast(SuperLattice);
+abuffer.add(LatticeInv.begin(),LatticeInv.end()); //myComm->bcast(LatticeInv);
+aibuffer.add(NumBands); //myComm->bcast(NumBands);
+aibuffer.add(NumElectrons); //myComm->bcast(NumElectrons);
+aibuffer.add(NumSpins); //myComm->bcast(NumSpins);
+aibuffer.add(NumTwists); //myComm->bcast(NumTwists);
+aibuffer.add(numIons); //myComm->bcast(numIons);
+aibuffer.add(NumMuffinTins);
+aibuffer.add(numAtomicOrbitals);
+aibuffer.add(numDensityGvecs);
+aibuffer.add(HaveOrbDerivs);
+myComm->bcast(abuffer);
+myComm->bcast(aibuffer);
+if(myComm->rank())
+{
+abuffer.rewind();
+aibuffer.rewind();
+aibuffer.get(Version.begin(),Version.end());
+aibuffer.get(Format);
+abuffer.get(Lattice.begin(),Lattice.end());
+abuffer.get(RecipLattice.begin(),RecipLattice.end());
+abuffer.get(SuperLattice.begin(),SuperLattice.end());
+abuffer.get(LatticeInv.begin(),LatticeInv.end());
+aibuffer.get(NumBands);
+aibuffer.get(NumElectrons);
+aibuffer.get(NumSpins);
+aibuffer.get(NumTwists);
+aibuffer.get(numIons);
+aibuffer.get(NumMuffinTins);
+aibuffer.get(numAtomicOrbitals);
+aibuffer.get(numDensityGvecs);
+aibuffer.get(HaveOrbDerivs);
+MT_APW_radii.resize(NumMuffinTins);
+MT_APW_lmax.resize(NumMuffinTins);
+MT_APW_rgrids.resize(NumMuffinTins);
+MT_APW_num_radial_points.resize(NumMuffinTins);
+MT_centers.resize(NumMuffinTins);
+TargetPtcl.DensityReducedGvecs.resize(numDensityGvecs);
+TargetPtcl.Density_G.resize(numDensityGvecs);
+AtomicOrbitals.resize(numAtomicOrbitals);
+}
+std::vector<int> rgrids_sizes(NumMuffinTins);
+for (int tin=0; tin<NumMuffinTins; tin++)
+rgrids_sizes[tin] = MT_APW_rgrids[tin].size();
+myComm->bcast(rgrids_sizes);
+if (myComm->rank())
+for (int tin=0; tin<NumMuffinTins; tin++)
+MT_APW_rgrids[tin].resize(rgrids_sizes[tin]);
+if (IonTypes.size() != numIons)
+{
+IonTypes.resize(numIons);
+IonPos.resize(numIons);
+}
+//new buffer
+PooledData<double> bbuffer;
+PooledData<int> bibuffer;
+for(int i=0; i<numIons; ++i)
+bibuffer.add(IonTypes[i]);
+//myComm->bcast(IonTypes);
+bbuffer.add(&IonPos[0][0],&IonPos[0][0]+OHMMS_DIM*numIons);
+//myComm->bcast(IonPos);
+if (TwistAngles.size() != NumTwists)
+TwistAngles.resize(NumTwists);
+bbuffer.add(&TwistAngles[0][0],&TwistAngles[0][0]+OHMMS_DIM*NumTwists);
+//myComm->bcast(TwistAngles);
+if (TwistSymmetry.size() != NumTwists)
+TwistSymmetry.resize(NumTwists);
+bibuffer.add(&TwistSymmetry[0],&TwistSymmetry[0]+NumTwists);
+if (TwistWeight.size() != NumTwists)
+TwistWeight.resize(NumTwists);
+bibuffer.add(&TwistWeight[0],&TwistWeight[0]+NumTwists);
+bbuffer.add(MT_APW_radii.begin(), MT_APW_radii.end());
+bibuffer.add(MT_APW_lmax.begin(),  MT_APW_lmax.end());
+bibuffer.add(MT_APW_num_radial_points.begin(),
+       MT_APW_num_radial_points.end());
+bbuffer.add(&(MT_centers[0][0]), &(MT_centers[0][0])+OHMMS_DIM*NumMuffinTins);
+for (int i=0; i<NumMuffinTins; i++)
+bbuffer.add(MT_APW_rgrids[i].begin(), MT_APW_rgrids[i].end());
+bibuffer.add(&(TargetPtcl.DensityReducedGvecs[0][0]),
+       &(TargetPtcl.DensityReducedGvecs[0][0])+numDensityGvecs*OHMMS_DIM);
+bbuffer.add(&(TargetPtcl.Density_G[0]),
+      &(TargetPtcl.Density_G[0]) + numDensityGvecs);
+for (int iat=0; iat<numAtomicOrbitals; iat++)
+{
+AtomicOrbital<std::complex<double> > &orb = AtomicOrbitals[iat];
+bibuffer.add (orb.SplinePoints);
+bibuffer.add (orb.PolyOrder);
+bibuffer.add (orb.lMax);
+bibuffer.add (orb.Numlm);
+bbuffer.add  (&orb.Pos[0], &orb.Pos[0]+OHMMS_DIM);
+bbuffer.add  (orb.CutoffRadius);
+bbuffer.add  (orb.SplineRadius);
+bbuffer.add  (orb.PolyRadius);
+}
+myComm->bcast(bbuffer);
+myComm->bcast(bibuffer);
+if(myComm->rank())
+{
+bbuffer.rewind();
+bibuffer.rewind();
+for(int i=0; i<numIons; ++i)
+bibuffer.get(IonTypes[i]);
+bbuffer.get(&IonPos[0][0],&IonPos[0][0]+OHMMS_DIM*numIons);
+bbuffer.get(&TwistAngles[0][0],&TwistAngles[0][0]+OHMMS_DIM*NumTwists);
+bibuffer.get(&TwistSymmetry[0],&TwistSymmetry[0]+NumTwists);
+bibuffer.get(&TwistWeight[0],&TwistWeight[0]+NumTwists);
+bbuffer.get(MT_APW_radii.begin(), MT_APW_radii.end());
+bibuffer.get(MT_APW_lmax.begin(),  MT_APW_lmax.end());
+bibuffer.get(MT_APW_num_radial_points.begin(),
+	 MT_APW_num_radial_points.end());
+bbuffer.get(&(MT_centers[0][0]),
+	&(MT_centers[0][0])+OHMMS_DIM*NumMuffinTins);
+for (int i=0; i<NumMuffinTins; i++)
+bbuffer.get(MT_APW_rgrids[i].begin(), MT_APW_rgrids[i].end());
+bibuffer.get(&(TargetPtcl.DensityReducedGvecs[0][0]),
+	 &(TargetPtcl.DensityReducedGvecs[0][0])+
+	 numDensityGvecs*OHMMS_DIM);
+bbuffer.get(&(TargetPtcl.Density_G[0]),
+	&(TargetPtcl.Density_G[0]) + numDensityGvecs);
+for (int iat=0; iat<numAtomicOrbitals; iat++)
+{
+AtomicOrbital<std::complex<double> > &orb = AtomicOrbitals[iat];
+bibuffer.get (orb.SplinePoints);
+bibuffer.get (orb.PolyOrder);
+bibuffer.get (orb.lMax);
+bibuffer.get (orb.Numlm);
+bbuffer.get  (&orb.Pos[0], &orb.Pos[0]+OHMMS_DIM);
+bbuffer.get  (orb.CutoffRadius);
+bbuffer.get  (orb.SplineRadius);
+bbuffer.get  (orb.PolyRadius);
+}
+}
+//buffer to bcast hybrid representation atomic orbital info
+PooledData<double> cbuffer;
+PooledData<int> cibuffer;
+myComm->bcast(cbuffer);
+myComm->bcast(cibuffer);
+AtomicCentersInfo.resize(numIons);
+Super2Prim.resize(SourcePtcl->R.size());
+cbuffer.add(AtomicCentersInfo.inner_cutoff.begin(), AtomicCentersInfo.inner_cutoff.end());
+cbuffer.add(AtomicCentersInfo.non_overlapping_radius.begin(), AtomicCentersInfo.non_overlapping_radius.end());
+cbuffer.add(AtomicCentersInfo.cutoff.begin(), AtomicCentersInfo.cutoff.end());
+cbuffer.add(AtomicCentersInfo.spline_radius.begin(), AtomicCentersInfo.spline_radius.end());
+cibuffer.add(Super2Prim.begin(),Super2Prim.end());
+cibuffer.add(AtomicCentersInfo.lmax.begin(), AtomicCentersInfo.lmax.end());
+cibuffer.add(AtomicCentersInfo.GroupID.begin(), AtomicCentersInfo.GroupID.end());
+cibuffer.add(AtomicCentersInfo.spline_npoints.begin(), AtomicCentersInfo.spline_npoints.end());
+myComm->bcast(cbuffer);
+myComm->bcast(cibuffer);
+if(myComm->rank())
+{
+cbuffer.rewind();
+cibuffer.rewind();
+cbuffer.get(AtomicCentersInfo.inner_cutoff.begin(), AtomicCentersInfo.inner_cutoff.end());
+cbuffer.get(AtomicCentersInfo.non_overlapping_radius.begin(), AtomicCentersInfo.non_overlapping_radius.end());
+cbuffer.get(AtomicCentersInfo.cutoff.begin(), AtomicCentersInfo.cutoff.end());
+cbuffer.get(AtomicCentersInfo.spline_radius.begin(), AtomicCentersInfo.spline_radius.end());
+cibuffer.get(Super2Prim.begin(),Super2Prim.end());
+cibuffer.get(AtomicCentersInfo.lmax.begin(), AtomicCentersInfo.lmax.end());
+cibuffer.get(AtomicCentersInfo.GroupID.begin(), AtomicCentersInfo.GroupID.end());
+cibuffer.get(AtomicCentersInfo.spline_npoints.begin(), AtomicCentersInfo.spline_npoints.end());
+for (int i=0; i<numIons; i++)
+AtomicCentersInfo.ion_pos[i]=IonPos[i];
+}
 }
 bool
 EinsplineSetBuilderInterface::CheckLattice()
 {
-  update_token(__FILE__,__LINE__,"CheckLattice");
+update_token(__FILE__,__LINE__,"CheckLattice");
 
-  double diff=0.0;
-  for (int i=0; i<OHMMS_DIM; i++)
-    for (int j=0; j<OHMMS_DIM; j++)
-    {
-      double max_abs=std::max(std::abs(SuperLattice(i,j)),static_cast<double>(std::abs(TargetPtcl.Lattice.R(i,j))));
-      if(max_abs>MatchingTol)
-        diff=std::max(diff,std::abs(SuperLattice(i,j) - TargetPtcl.Lattice.R(i,j))/max_abs);
-    }
-  if(diff>MatchingTol)
-  {
-    std::ostringstream o;
-    o.setf(std::ios::scientific, std::ios::floatfield);
-    o.precision(6);
-    o << "EinsplineSetBuilder::ReadOrbitalInfo_ESHDF \n"
-      << "Mismatched supercell lattices.\n";
-    o << " Lattice in ESHDF5 " << std::endl;
-    o << SuperLattice << std::endl;
-    o << " Lattice in xml" << std::endl;
-    o << TargetPtcl.Lattice.R << std::endl;
-    o << " Difference " << std::endl;
-    o << SuperLattice-TargetPtcl.Lattice.R << std::endl;
-    o << " Max relative error = "<< diff << std::endl;
-    o << " Tolerance      = "<< MatchingTol << std::endl;
-    app_error() << o.str();
-    return false;
-  }
-  return true;
+double diff=0.0;
+for (int i=0; i<OHMMS_DIM; i++)
+for (int j=0; j<OHMMS_DIM; j++)
+{
+double max_abs=std::max(std::abs(SuperLattice(i,j)),static_cast<double>(std::abs(TargetPtcl.Lattice.R(i,j))));
+if(max_abs>MatchingTol)
+diff=std::max(diff,std::abs(SuperLattice(i,j) - TargetPtcl.Lattice.R(i,j))/max_abs);
+}
+if(diff>MatchingTol)
+{
+std::ostringstream o;
+o.setf(std::ios::scientific, std::ios::floatfield);
+o.precision(6);
+o << "EinsplineSetBuilder::ReadOrbitalInfo_ESHDF \n"
+<< "Mismatched supercell lattices.\n";
+o << " Lattice in ESHDF5 " << std::endl;
+o << SuperLattice << std::endl;
+o << " Lattice in xml" << std::endl;
+o << TargetPtcl.Lattice.R << std::endl;
+o << " Difference " << std::endl;
+o << SuperLattice-TargetPtcl.Lattice.R << std::endl;
+o << " Max relative error = "<< diff << std::endl;
+o << " Tolerance      = "<< MatchingTol << std::endl;
+app_error() << o.str();
+return false;
+}
+return true;
 }
 
 // Should I get the other stuff here too?
 
 void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 {
-  // 1. set a lot of internal parameters in the EinsplineSetBuilder class
-  //  e.g. TileMatrix, UseRealOrbitals, DistinctTwists, MakeTwoCopies.
-  // 2. this is also where metadata for the orbitals are read from the wavefunction hdf5 file
-  //  and broadcast to MPI groups. Variables broadcasted are listed in 
-  //  EinsplineSetBuilderCommon.cpp EinsplineSetBuilder::BroadcastOrbitalInfo()
-  //   
+// 1. set a lot of internal parameters in the EinsplineSetBuilder class
+//  e.g. TileMatrix, UseRealOrbitals, DistinctTwists, MakeTwoCopies.
+// 2. this is also where metadata for the orbitals are read from the wavefunction hdf5 file
+//  and broadcast to MPI groups. Variables broadcasted are listed in 
+//  EinsplineSetBuilderCommon.cpp EinsplineSetBuilder::BroadcastOrbitalInfo()
+//   
 
-  Timer orb_info_timer;
-  // The tiling can be set by a simple vector, (e.g. 2x2x2), or by a
-  // full 3x3 matrix of integers.  If the tilematrix was not set in
-  // the input file...
-  bool matrixNotSet = true;
-  for (int i=0; i<3; i++)
-    for (int j=0; j<3; j++)
-      matrixNotSet = matrixNotSet && (TileMatrix(i,j) == 0);
-  // then set the matrix to what may have been specified in the
-  // tiling vector
-  if (matrixNotSet)
-    for (int i=0; i<3; i++)
-      for (int j=0; j<3; j++)
-        TileMatrix(i,j) = (i==j) ? TileFactor[i] : 0;
-  char buff[1000];
-  if (myComm->rank() == 0)
-  {
-    snprintf (buff, 1000, "  TileMatrix = \n [ %2d %2d %2d\n   %2d %2d %2d\n   %2d %2d %2d ]\n",
-             TileMatrix(0,0), TileMatrix(0,1), TileMatrix(0,2),
-             TileMatrix(1,0), TileMatrix(1,1), TileMatrix(1,2),
-             TileMatrix(2,0), TileMatrix(2,1), TileMatrix(2,2));
-    app_log() << buff;
-  }  
-  if (numOrbs == 0)
-  {
-    app_error() << "You must specify the number of orbitals in the input file.\n";
-    APP_ABORT("EinsplineSetBuilder::createSPOSet");
-  }
-  else
-    app_log() << "  Reading " << numOrbs << " orbitals from HDF5 file.\n";
-  orb_info_timer.restart();
-  /////////////////////////////////////////////////////////////////
-  // Read the basic orbital information, without reading all the //
-  // orbitals themselves.                                        //
-  /////////////////////////////////////////////////////////////////
-  if (myComm->rank() == 0)
-    if (!ReadOrbitalInfo())
-    {
-      app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";
-      APP_ABORT("EinsplineSetBuilder::createSPOSet");
-    }
-  app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
+Timer orb_info_timer;
+// The tiling can be set by a simple vector, (e.g. 2x2x2), or by a
+// full 3x3 matrix of integers.  If the tilematrix was not set in
+// the input file...
+bool matrixNotSet = true;
+for (int i=0; i<3; i++)
+for (int j=0; j<3; j++)
+matrixNotSet = matrixNotSet && (TileMatrix(i,j) == 0);
+// then set the matrix to what may have been specified in the
+// tiling vector
+if (matrixNotSet)
+for (int i=0; i<3; i++)
+for (int j=0; j<3; j++)
+TileMatrix(i,j) = (i==j) ? TileFactor[i] : 0;
+char buff[1000];
+if (myComm->rank() == 0)
+{
+snprintf (buff, 1000, "  TileMatrix = \n [ %2d %2d %2d\n   %2d %2d %2d\n   %2d %2d %2d ]\n",
+     TileMatrix(0,0), TileMatrix(0,1), TileMatrix(0,2),
+     TileMatrix(1,0), TileMatrix(1,1), TileMatrix(1,2),
+     TileMatrix(2,0), TileMatrix(2,1), TileMatrix(2,2));
+app_log() << buff;
+}  
+if (numOrbs == 0)
+{
+app_error() << "You must specify the number of orbitals in the input file.\n";
+APP_ABORT("EinsplineSetBuilder::createSPOSet");
+}
+else
+app_log() << "  Reading " << numOrbs << " orbitals from HDF5 file.\n";
+orb_info_timer.restart();
+/////////////////////////////////////////////////////////////////
+// Read the basic orbital information, without reading all the //
+// orbitals themselves.                                        //
+/////////////////////////////////////////////////////////////////
+if (myComm->rank() == 0)
+if (!ReadOrbitalInfo())
+{
+app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";
+APP_ABORT("EinsplineSetBuilder::createSPOSet");
+}
+app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
 //  myComm->barrier();
-  orb_info_timer.restart();
-  BroadcastOrbitalInfo();
+orb_info_timer.restart();
+BroadcastOrbitalInfo();
 
-  app_log() <<  "TIMER  EinsplineSetBuilder::BroadcastOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
-  app_log().flush();
+app_log() <<  "TIMER  EinsplineSetBuilder::BroadcastOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
+app_log().flush();
 
-  // setup primitive cell and supercell
-  PrimCell.set(Lattice);
-  SuperCell.set(SuperLattice);
-  GGt=dot(transpose(PrimCell.G), PrimCell.G);
-  for (int iat=0; iat<AtomicOrbitals.size(); iat++)
-    AtomicOrbitals[iat].Lattice = Lattice;
+// setup primitive cell and supercell
+PrimCell.set(Lattice);
+SuperCell.set(SuperLattice);
+GGt=dot(transpose(PrimCell.G), PrimCell.G);
+for (int iat=0; iat<AtomicOrbitals.size(); iat++)
+AtomicOrbitals[iat].Lattice = Lattice;
 
-  // Now, analyze the k-point mesh to figure out the what k-points  are needed
-  TwistNum = TwistNum_inp;
-  AnalyzeTwists2();
+// Now, analyze the k-point mesh to figure out the what k-points  are needed
+TwistNum = TwistNum_inp;
+AnalyzeTwists2();
 }
 
 SPOSet*
 EinsplineSetBuilderInterface::createSPOSetFromXML(xmlNodePtr cur)
 {
-  update_token(__FILE__,__LINE__,"createSPOSetFromXML");
-  //use 2 bohr as the default when truncated orbitals are used based on the extend of the ions
-  SPOSet *OrbitalSet;
-  int numOrbs = 0;
-  int sortBands(1);
-  int spinSet = 0;
-  int TwistNum_inp=0;
+update_token(__FILE__,__LINE__,"createSPOSetFromXML");
+//use 2 bohr as the default when truncated orbitals are used based on the extend of the ions
+SPOSet *OrbitalSet;
+int numOrbs = 0;
+int sortBands(1);
+int spinSet = 0;
+int TwistNum_inp=0;
 
-  std::string sourceName;
-  std::string spo_prec("double");
-  std::string truncate("no");
-  std::string hybrid_rep("no");
-  std::string use_einspline_set_extended("no"); // use old spline library for high-order derivatives, e.g. needed for backflow optimization
+std::string sourceName;
+std::string spo_prec("double");
+std::string truncate("no");
+std::string hybrid_rep("no");
+std::string use_einspline_set_extended("no"); // use old spline library for high-order derivatives, e.g. needed for backflow optimization
 #if defined(QMC_CUDA) || defined(ENABLE_OFFLOAD)
-  std::string useGPU="yes";
+std::string useGPU="yes";
 #else
-  std::string useGPU="no";
+std::string useGPU="no";
 #endif
-  std::string GPUsharing="no";
-  NewTimer* spo_timer = new NewTimer("einspline::CreateSPOSetFromXML", timer_level_medium);
-  TimerManager.addTimer(spo_timer);
-  spo_timer->start();
+std::string GPUsharing="no";
+NewTimer* spo_timer = new NewTimer("einspline::CreateSPOSetFromXML", timer_level_medium);
+TimerManager.addTimer(spo_timer);
+spo_timer->start();
 
-  {
-    OhmmsAttributeSet a;
-    a.add (H5FileName, "href");
-    a.add (TileFactor, "tile");
-    a.add (sortBands,  "sort");
-    a.add (TileMatrix, "tilematrix");
-    a.add (TwistNum_inp,   "twistnum");
-    a.add (givenTwist,   "twist");
-    a.add (sourceName, "source");
-    a.add (MeshFactor, "meshfactor");
-    a.add (hybrid_rep, "hybridrep");
-    a.add (useGPU,     "gpu");
-    a.add (GPUsharing, "gpusharing"); // split spline across GPUs visible per rank
-    a.add (spo_prec,   "precision");
-    a.add (truncate,   "truncate");
-    a.add (use_einspline_set_extended,"use_old_spline");
-    a.add (myName, "tag");
+{
+OhmmsAttributeSet a;
+a.add (H5FileName, "href");
+a.add (TileFactor, "tile");
+a.add (sortBands,  "sort");
+a.add (TileMatrix, "tilematrix");
+a.add (TwistNum_inp,   "twistnum");
+a.add (givenTwist,   "twist");
+a.add (sourceName, "source");
+a.add (MeshFactor, "meshfactor");
+a.add (hybrid_rep, "hybridrep");
+a.add (useGPU,     "gpu");
+a.add (GPUsharing, "gpusharing"); // split spline across GPUs visible per rank
+a.add (spo_prec,   "precision");
+a.add (truncate,   "truncate");
+a.add (use_einspline_set_extended,"use_old_spline");
+a.add (myName, "tag");
 #if defined(QMC_CUDA)
-    a.add (gpu::MaxGPUSpineSizeMB, "Spline_Size_Limit_MB");
+a.add (gpu::MaxGPUSpineSizeMB, "Spline_Size_Limit_MB");
 #endif
 
-    a.put (XMLRoot);
-    a.add (numOrbs,    "size");
-    a.add (numOrbs,    "norbs");
-    a.add(spinSet,"spindataset"); a.add(spinSet,"group");
-    a.put (cur);
+a.put (XMLRoot);
+a.add (numOrbs,    "size");
+a.add (numOrbs,    "norbs");
+a.add(spinSet,"spindataset"); a.add(spinSet,"group");
+a.put (cur);
 
-    if(myName.empty()) myName="einspline";
+if(myName.empty()) myName="einspline";
 
-  }
+}
 
-  SourcePtcl=ParticleSets[sourceName];
-  if(SourcePtcl==0)
-  {
-    APP_ABORT("Einspline needs the source particleset");
-  }
-  else
-  { //keep the one-body distance table index 
+SourcePtcl=ParticleSets[sourceName];
+if(SourcePtcl==0)
+{
+APP_ABORT("Einspline needs the source particleset");
+}
+else
+{ //keep the one-body distance table index 
 #if defined(ENABLE_SOA)
-    myTableIndex=TargetPtcl.addTable(*SourcePtcl,DT_SOA_PREFERRED);
+myTableIndex=TargetPtcl.addTable(*SourcePtcl,DT_SOA_PREFERRED);
 #else
-    myTableIndex=TargetPtcl.addTable(*SourcePtcl,DT_AOS);
+myTableIndex=TargetPtcl.addTable(*SourcePtcl,DT_AOS);
 #endif
-    SourcePtcl->addTable(*SourcePtcl,DT_SOA);
-  }
+SourcePtcl->addTable(*SourcePtcl,DT_SOA);
+}
 
-  ///////////////////////////////////////////////
-  // Read occupation information from XML file //
-  ///////////////////////////////////////////////
-  std::vector<int> Occ_Old(0,0);
-  Occ.resize(0,0);
-  bool NewOcc(false);
+///////////////////////////////////////////////
+// Read occupation information from XML file //
+///////////////////////////////////////////////
+std::vector<int> Occ_Old(0,0);
+Occ.resize(0,0);
+bool NewOcc(false);
 
-  {
-    OhmmsAttributeSet oAttrib;
-    oAttrib.add(spinSet,"spindataset");
-    oAttrib.put(cur);
-  }
+{
+OhmmsAttributeSet oAttrib;
+oAttrib.add(spinSet,"spindataset");
+oAttrib.put(cur);
+}
 
-  xmlNodePtr spo_cur=cur;
-  cur = cur->children;
-  while (cur != NULL)
-  {
-    std::string cname((const char*)(cur->name));
-    if(cname == "occupation")
-    {
-      std::string occ_mode("ground");
-      occ_format="energy";
-      particle_hole_pairs=0;
-      OhmmsAttributeSet oAttrib;
-      oAttrib.add(occ_mode,"mode");
-      oAttrib.add(spinSet,"spindataset");
-      oAttrib.add(occ_format,"format");
-      oAttrib.add(particle_hole_pairs,"pairs");
-      oAttrib.put(cur);
-      if(occ_mode == "excited")
-      {
-        putContent(Occ,cur);
-      }
-      else if(occ_mode != "ground")
-      {
-        app_error() << "Only ground state occupation currently supported "
-          << "in EinsplineSetBuilder.\n";
-        APP_ABORT("EinsplineSetBuilder::createSPOSet");
-      }
-    }
-    cur = cur->next;
-  }
-  if (Occ != Occ_Old)
-  {
-    NewOcc=true;
-    Occ_Old = Occ;
-  }
-  else
-    NewOcc=false;
+xmlNodePtr spo_cur=cur;
+cur = cur->children;
+while (cur != NULL)
+{
+std::string cname((const char*)(cur->name));
+if(cname == "occupation")
+{
+std::string occ_mode("ground");
+occ_format="energy";
+particle_hole_pairs=0;
+OhmmsAttributeSet oAttrib;
+oAttrib.add(occ_mode,"mode");
+oAttrib.add(spinSet,"spindataset");
+oAttrib.add(occ_format,"format");
+oAttrib.add(particle_hole_pairs,"pairs");
+oAttrib.put(cur);
+if(occ_mode == "excited")
+{
+putContent(Occ,cur);
+}
+else if(occ_mode != "ground")
+{
+app_error() << "Only ground state occupation currently supported "
+  << "in EinsplineSetBuilder.\n";
+APP_ABORT("EinsplineSetBuilder::createSPOSet");
+}
+}
+cur = cur->next;
+}
+if (Occ != Occ_Old)
+{
+NewOcc=true;
+Occ_Old = Occ;
+}
+else
+NewOcc=false;
 #if defined(QMC_CUDA)
-  if(hybrid_rep=="yes") APP_ABORT("The 'hybridrep' feature of spline SPO has not been enabled on GPU. Stay tuned.");
-  app_log() << "\t  QMC_CUDA=1 Overwriting the einspline storage on the host to double precision.\n";
-  spo_prec="double"; //overwrite
-  truncate="no"; //overwrite
+if(hybrid_rep=="yes") APP_ABORT("The 'hybridrep' feature of spline SPO has not been enabled on GPU. Stay tuned.");
+app_log() << "\t  QMC_CUDA=1 Overwriting the einspline storage on the host to double precision.\n";
+spo_prec="double"; //overwrite
+truncate="no"; //overwrite
 #endif
 #if defined(MIXED_PRECISION)
-  app_log() << "\t  MIXED_PRECISION=1 Overwriting the einspline storage to single precision.\n";
-  spo_prec="single"; //overwrite
+app_log() << "\t  MIXED_PRECISION=1 Overwriting the einspline storage to single precision.\n";
+spo_prec="single"; //overwrite
 #endif
-  H5OrbSet aset(H5FileName, spinSet, numOrbs);
-  std::map<H5OrbSet,SPOSet*,H5OrbSet>::iterator iter;
-  iter = SPOSetMap.find (aset);
-  if ((iter != SPOSetMap.end() ) && (!NewOcc))
-  {
-    app_log() << "SPOSet parameters match in EinsplineSetBuilder:  "
-              << "cloning EinsplineSet object.\n";
-    return iter->second->makeClone();
-  }
+H5OrbSet aset(H5FileName, spinSet, numOrbs);
+std::map<H5OrbSet,SPOSet*,H5OrbSet>::iterator iter;
+iter = SPOSetMap.find (aset);
+if ((iter != SPOSetMap.end() ) && (!NewOcc))
+{
+app_log() << "SPOSet parameters match in EinsplineSetBuilder:  "
+      << "cloning EinsplineSet object.\n";
+return iter->second->makeClone();
+}
 
-  if(FullBands[spinSet]==0) FullBands[spinSet]=new std::vector<BandInfo>;
+if(FullBands[spinSet]==0) FullBands[spinSet]=new std::vector<BandInfo>;
 
-  // Ensure the first SPO set must be spinSet==0
-  // to correctly initialize key data of EinsplineSetBuilder
-  if ( SPOSetMap.size()==0 && spinSet!=0 )
-  {
-    app_error() << "The first SPO set must have spindataset=\"0\"" << std::endl;
-    abort();
-  }
+// Ensure the first SPO set must be spinSet==0
+// to correctly initialize key data of EinsplineSetBuilder
+if ( SPOSetMap.size()==0 && spinSet!=0 )
+{
+app_error() << "The first SPO set must have spindataset=\"0\"" << std::endl;
+abort();
+}
 
-  // set the internal parameters
-  if (spinSet == 0) set_metadata(numOrbs,TwistNum_inp);
-  //if (use_complex_orb == "yes") UseRealOrbitals = false; // override given user input
+// set the internal parameters
+if (spinSet == 0) set_metadata(numOrbs,TwistNum_inp);
+//if (use_complex_orb == "yes") UseRealOrbitals = false; // override given user input
 
-  // look for <backflow>, would be a lot easier with xpath, but I cannot get it to work
-  bool has_backflow = false;
+// look for <backflow>, would be a lot easier with xpath, but I cannot get it to work
+bool has_backflow = false;
 
-  xmlNodePtr wf  = XMLRoot->parent; // <wavefuntion>
-  xmlNodePtr kid = wf->children;
-  while (kid != NULL)
-  {
-    std::string tag((const char*)(kid->name));
-    if (tag=="determinantset" || tag=="sposet_builder")
-    {
-      xmlNodePtr kid1 = kid->children;
-      while (kid1 != NULL)
-      {
-        std::string tag1((const char*)(kid1->name));
-        if (tag1=="backflow")
-        {
-          has_backflow = true;
-        }
-        kid1 = kid1->next;
-      } 
-    }
-    kid = kid->next; 
-  }
+xmlNodePtr wf  = XMLRoot->parent; // <wavefuntion>
+xmlNodePtr kid = wf->children;
+while (kid != NULL)
+{
+std::string tag((const char*)(kid->name));
+if (tag=="determinantset" || tag=="sposet_builder")
+{
+xmlNodePtr kid1 = kid->children;
+while (kid1 != NULL)
+{
+std::string tag1((const char*)(kid1->name));
+if (tag1=="backflow")
+{
+  has_backflow = true;
+}
+kid1 = kid1->next;
+} 
+}
+kid = kid->next; 
+}
 
-  if (has_backflow && use_einspline_set_extended=="yes" && UseRealOrbitals) APP_ABORT("backflow optimization is broken with UseRealOrbitals");
+if (has_backflow && use_einspline_set_extended=="yes" && UseRealOrbitals) APP_ABORT("backflow optimization is broken with UseRealOrbitals");
 
-  //////////////////////////////////
-  // Create the OrbitalSet object
-  //////////////////////////////////
-  app_log() << "So far so good\n";
-  Timer mytimer;
-  mytimer.restart();
-  OccupyBands(spinSet, sortBands, numOrbs);
-  //OccupyBands(spinSet, sortBands, numOrbs);
-  app_log() << "So far so good\n";
-  if(spinSet==0) TileIons();
-  app_log() << "So far so good\n";
+//////////////////////////////////
+// Create the OrbitalSet object
+//////////////////////////////////
+app_log() << "So far so good\n";
+Timer mytimer;
+mytimer.restart();
+OccupyBands(spinSet, sortBands, numOrbs);
+//OccupyBands(spinSet, sortBands, numOrbs);
+app_log() << "So far so good\n";
+if(spinSet==0) TileIons();
+app_log() << "So far so good\n";
 
-  bool use_single= (spo_prec == "single" || spo_prec == "float");
+bool use_single= (spo_prec == "single" || spo_prec == "float");
 
-  // safeguard for a removed feature
-  if(truncate=="yes") APP_ABORT("The 'truncate' feature of spline SPO has been removed. Please use hybrid orbital representation.");
+// safeguard for a removed feature
+if(truncate=="yes") APP_ABORT("The 'truncate' feature of spline SPO has been removed. Please use hybrid orbital representation.");
 
-  app_log() << "So far so good\n";
+app_log() << "So far so good\n";
 #if !defined(QMC_COMPLEX)
-  if (UseRealOrbitals)
-  {
-    //if(TargetPtcl.Lattice.SuperCellEnum != SUPERCELL_BULK && truncate=="yes")
-    if(MixedSplineReader==0)
-    {
-      if(use_single)
-        MixedSplineReader= createBsplineRealSingle(this, hybrid_rep=="yes", useGPU);
-      else
-        MixedSplineReader= createBsplineRealDouble(this, hybrid_rep=="yes", useGPU);
-    }
-  }
-  else
+if (UseRealOrbitals)
+{
+//if(TargetPtcl.Lattice.SuperCellEnum != SUPERCELL_BULK && truncate=="yes")
+if(MixedSplineReader==0)
+{
+if(use_single)
+MixedSplineReader= createBsplineRealSingle(this, hybrid_rep=="yes", useGPU);
+else
+MixedSplineReader= createBsplineRealDouble(this, hybrid_rep=="yes", useGPU);
+}
+}
+else
 #endif
-  {
-    if(MixedSplineReader==0)
-    {
-      if(use_single)
-        MixedSplineReader= createBsplineComplexSingle(this, hybrid_rep=="yes", useGPU);
-      else
-        MixedSplineReader= createBsplineComplexDouble(this, hybrid_rep=="yes", useGPU);
-    }
-  }
+{
+if(MixedSplineReader==0)
+{
+if(use_single)
+MixedSplineReader= createBsplineComplexSingle(this, hybrid_rep=="yes", useGPU);
+else
+MixedSplineReader= createBsplineComplexDouble(this, hybrid_rep=="yes", useGPU);
+}
+}
 
-  MixedSplineReader->setCommon(XMLRoot);
-  // temporary disable the following function call, Ye Luo
-  // RotateBands_ESHDF(spinSet, dynamic_cast<EinsplineSetExtended<std::complex<double> >*>(OrbitalSet));
-  HasCoreOrbs=bcastSortBands(spinSet,NumDistinctOrbitals,myComm->rank()==0);
-  SPOSet* bspline_zd=MixedSplineReader->create_spline_set(spinSet,spo_cur);
-  if(!bspline_zd)
-    APP_ABORT_TRACE(__FILE__,__LINE__,"Failed to create SPOSet*");
-  OrbitalSet = bspline_zd;
+MixedSplineReader->setCommon(XMLRoot);
+// temporary disable the following function call, Ye Luo
+// RotateBands_ESHDF(spinSet, dynamic_cast<EinsplineSetExtended<std::complex<double> >*>(OrbitalSet));
+HasCoreOrbs=bcastSortBands(spinSet,NumDistinctOrbitals,myComm->rank()==0);
+SPOSet* bspline_zd=MixedSplineReader->create_spline_set(spinSet,spo_cur);
+if(!bspline_zd)
+APP_ABORT_TRACE(__FILE__,__LINE__,"Failed to create SPOSet*");
+OrbitalSet = bspline_zd;
 #if defined(MIXED_PRECISION)
-  if(use_einspline_set_extended=="yes")
-  {
-    app_error() << "Option use_old_spline is not supported by the mixed precision build!" << std::endl;
-    abort();
-  }
+if(use_einspline_set_extended=="yes")
+{
+app_error() << "Option use_old_spline is not supported by the mixed precision build!" << std::endl;
+abort();
+}
 /*
 #else
 #ifndef QMC_CUDA
-  if(use_einspline_set_extended=="yes")
+if(use_einspline_set_extended=="yes")
 #endif
-  {
-    EinsplineSet *new_OrbitalSet;
-    if (UseRealOrbitals)
-    {
-      EinsplineSetExtended<double> *temp_OrbitalSet;
+{
+EinsplineSet *new_OrbitalSet;
+if (UseRealOrbitals)
+{
+EinsplineSetExtended<double> *temp_OrbitalSet;
 #if defined(QMC_CUDA)
-      if (AtomicOrbitals.size() > 0)
-        temp_OrbitalSet = new EinsplineSetHybrid<double>;
-      else
+if (AtomicOrbitals.size() > 0)
+temp_OrbitalSet = new EinsplineSetHybrid<double>;
+else
 #endif
-        temp_OrbitalSet = new EinsplineSetExtended<double>;
-      MixedSplineReader->export_MultiSpline(&(temp_OrbitalSet->MultiSpline));
-      temp_OrbitalSet->MultiSpline->num_splines = NumDistinctOrbitals;
-      temp_OrbitalSet->resizeStorage(NumDistinctOrbitals, NumValenceOrbs);
-      //set the flags for anti periodic boundary conditions
-      temp_OrbitalSet->HalfG = dynamic_cast<SplineAdoptorBase<double,3> *>(OrbitalSet)->HalfG;
-      new_OrbitalSet = temp_OrbitalSet;
-    }
-    else
-    {
-      EinsplineSetExtended<std::complex<double> > *temp_OrbitalSet;
+temp_OrbitalSet = new EinsplineSetExtended<double>;
+MixedSplineReader->export_MultiSpline(&(temp_OrbitalSet->MultiSpline));
+temp_OrbitalSet->MultiSpline->num_splines = NumDistinctOrbitals;
+temp_OrbitalSet->resizeStorage(NumDistinctOrbitals, NumValenceOrbs);
+//set the flags for anti periodic boundary conditions
+temp_OrbitalSet->HalfG = dynamic_cast<SplineAdoptorBase<double,3> *>(OrbitalSet)->HalfG;
+new_OrbitalSet = temp_OrbitalSet;
+}
+else
+{
+EinsplineSetExtended<std::complex<double> > *temp_OrbitalSet;
 #if defined(QMC_CUDA)
-      if (AtomicOrbitals.size() > 0)
-        temp_OrbitalSet = new EinsplineSetHybrid<std::complex<double> >;
-      else
+if (AtomicOrbitals.size() > 0)
+temp_OrbitalSet = new EinsplineSetHybrid<std::complex<double> >;
+else
 #endif
-        temp_OrbitalSet = new EinsplineSetExtended<std::complex<double> >;
-      MixedSplineReader->export_MultiSpline(&(temp_OrbitalSet->MultiSpline));
-      temp_OrbitalSet->MultiSpline->num_splines = NumDistinctOrbitals;
-      temp_OrbitalSet->resizeStorage(NumDistinctOrbitals, NumValenceOrbs);
-      for (int iorb=0, num=0; iorb<NumDistinctOrbitals; iorb++)
-      {
-        int ti = (*FullBands[spinSet])[iorb].TwistIndex;
-        temp_OrbitalSet->kPoints[iorb] = PrimCell.k_cart(TwistAngles[ti]);
-        temp_OrbitalSet->MakeTwoCopies[iorb] = (num < (numOrbs-1)) && (*FullBands[spinSet])[iorb].MakeTwoCopies;
-        num += temp_OrbitalSet->MakeTwoCopies[iorb] ? 2 : 1;
-      }
-      new_OrbitalSet = temp_OrbitalSet;
-    }
-    //set the internal parameters
-    setTiling(new_OrbitalSet,numOrbs);
-    OrbitalSet = new_OrbitalSet;
-  }*/
+temp_OrbitalSet = new EinsplineSetExtended<std::complex<double> >;
+MixedSplineReader->export_MultiSpline(&(temp_OrbitalSet->MultiSpline));
+temp_OrbitalSet->MultiSpline->num_splines = NumDistinctOrbitals;
+temp_OrbitalSet->resizeStorage(NumDistinctOrbitals, NumValenceOrbs);
+for (int iorb=0, num=0; iorb<NumDistinctOrbitals; iorb++)
+{
+int ti = (*FullBands[spinSet])[iorb].TwistIndex;
+temp_OrbitalSet->kPoints[iorb] = PrimCell.k_cart(TwistAngles[ti]);
+temp_OrbitalSet->MakeTwoCopies[iorb] = (num < (numOrbs-1)) && (*FullBands[spinSet])[iorb].MakeTwoCopies;
+num += temp_OrbitalSet->MakeTwoCopies[iorb] ? 2 : 1;
+}
+new_OrbitalSet = temp_OrbitalSet;
+}
+//set the internal parameters
+setTiling(new_OrbitalSet,numOrbs);
+OrbitalSet = new_OrbitalSet;
+}*/
 #endif 
-  app_log() <<  "Time spent in creating B-spline SPOs " << mytimer.elapsed() << "sec" << std::endl;
+app_log() <<  "Time spent in creating B-spline SPOs " << mytimer.elapsed() << "sec" << std::endl;
 #ifdef Ye_debug
 #ifndef QMC_COMPLEX
-  if (myComm->rank()==0 && OrbitalSet->MuffinTins.size() > 0)
-  {
-    FILE *fout  = fopen ("TestMuffins.dat", "w");
-    Vector<double> phi(numOrbs), lapl(numOrbs);
-    Vector<PosType> grad(numOrbs);
-    ParticleSet P;
-    P.R.resize(6);
-    for (int i=0; i<P.R.size(); i++)
-      P.R[i] = PosType (0.0, 0.0, 0.0);
-    PosType N = 0.25*PrimCell.a(0) + 0.25*PrimCell.a(1) + 0.25*PrimCell.a(2);
-    for (double x=-1.0; x<=1.0; x+=0.0000500113412)
-    {
-      // for (double x=-0.003; x<=0.003; x+=0.0000011329343481381) {
-      P.R[0] = x * (PrimCell.a(0) + 0.914*PrimCell.a(1) +
-                    0.781413*PrimCell.a(2));
-      double r = std::sqrt(dot(P.R[0], P.R[0]));
-      double rN = std::sqrt(dot(P.R[0]-N, P.R[0]-N));
-      OrbitalSet->evaluate(P, 0, phi, grad, lapl);
-      // OrbitalSet->evaluate(P, 0, phi);
-      fprintf (fout, "%1.12e ", r*x/std::abs(x));
-      for (int j=0; j<numOrbs; j++)
-      {
-        double gmag = std::sqrt(dot(grad[j],grad[j]));
-        fprintf (fout, "%16.12e ",
-                 /*phi[j]*phi[j]**/(-5.0/r  -0.5*lapl[j]/phi[j]));
-        // double E = -5.0/r -0.5*lapl[j]/phi[j];
-        fprintf (fout, "%16.12e ", phi[j]);
-        fprintf (fout, "%16.12e ", gmag);
-      }
-      fprintf (fout, "\n");
-    }
-    fclose(fout);
-  }
+if (myComm->rank()==0 && OrbitalSet->MuffinTins.size() > 0)
+{
+FILE *fout  = fopen ("TestMuffins.dat", "w");
+Vector<double> phi(numOrbs), lapl(numOrbs);
+Vector<PosType> grad(numOrbs);
+ParticleSet P;
+P.R.resize(6);
+for (int i=0; i<P.R.size(); i++)
+P.R[i] = PosType (0.0, 0.0, 0.0);
+PosType N = 0.25*PrimCell.a(0) + 0.25*PrimCell.a(1) + 0.25*PrimCell.a(2);
+for (double x=-1.0; x<=1.0; x+=0.0000500113412)
+{
+// for (double x=-0.003; x<=0.003; x+=0.0000011329343481381) {
+P.R[0] = x * (PrimCell.a(0) + 0.914*PrimCell.a(1) +
+	    0.781413*PrimCell.a(2));
+double r = std::sqrt(dot(P.R[0], P.R[0]));
+double rN = std::sqrt(dot(P.R[0]-N, P.R[0]-N));
+OrbitalSet->evaluate(P, 0, phi, grad, lapl);
+// OrbitalSet->evaluate(P, 0, phi);
+fprintf (fout, "%1.12e ", r*x/std::abs(x));
+for (int j=0; j<numOrbs; j++)
+{
+double gmag = std::sqrt(dot(grad[j],grad[j]));
+fprintf (fout, "%16.12e ",
+	 /*phi[j]*phi[j]**/(-5.0/r  -0.5*lapl[j]/phi[j]));
+// double E = -5.0/r -0.5*lapl[j]/phi[j];
+fprintf (fout, "%16.12e ", phi[j]);
+fprintf (fout, "%16.12e ", gmag);
+}
+fprintf (fout, "\n");
+}
+fclose(fout);
+}
 #endif
 #endif
-  //if (sourceName.size() && (ParticleSets.find(sourceName) == ParticleSets.end()))
-  //{
-  //  app_log() << "  EinsplineSetBuilder creates a ParticleSet " << sourceName << std::endl;
-  //  ParticleSet* ions=new ParticleSet;
-  //  ions->Lattice=TargetPtcl.Lattice;
-  //  ESHDFIonsParser ap(*ions,H5FileID,myComm);
-  //  ap.put(XMLRoot);
-  //  ap.expand(TileMatrix);
-  //  ions->setName(sourceName);
-  //  ParticleSets[sourceName]=ions;
-  //  //overwrite the lattice and assign random
+//if (sourceName.size() && (ParticleSets.find(sourceName) == ParticleSets.end()))
+//{
+//  app_log() << "  EinsplineSetBuilder creates a ParticleSet " << sourceName << std::endl;
+//  ParticleSet* ions=new ParticleSet;
+//  ions->Lattice=TargetPtcl.Lattice;
+//  ESHDFIonsParser ap(*ions,H5FileID,myComm);
+//  ap.put(XMLRoot);
+//  ap.expand(TileMatrix);
+//  ions->setName(sourceName);
+//  ParticleSets[sourceName]=ions;
+//  //overwrite the lattice and assign random
   //  if(TargetPtcl.Lattice.SuperCellEnum)
   //  {
   //    TargetPtcl.Lattice=ions->Lattice;
@@ -760,17 +770,17 @@ bool
    //Tensor<int,OHMMS_DIM> TileMatrix;
 
    std::cerr << "Declare the pointer to ESHDF5interface...";
-   ESHDF5Interface esinterface;
+   //ESHDF5Interface esinterface;
    std::cerr << "  Done!\n";
 
    std::cerr << "Initialize it... \n";
-   esinterface.initialize();
+   esinterface->initialize();
    std::cerr << "  Done!\n";
 
-   esinterface.getVersion();
+   esinterface->getVersion();
 
    std::cerr << "Getting primitive vectors...";
-   esinterface.getPrimVecs(Lattice);
+   esinterface->getPrimVecs(Lattice);
    std::cerr << "  Done!\n";
  
 //   OHMMS::Controller->barrier();
@@ -813,13 +823,13 @@ bool
 
 //   OHMMS::Controller->barrier();
 
-   NumBands          = esinterface.getNumBands();
-   NumSpins          = esinterface.getNumSpins();
-   NumTwists         = esinterface.getNumTwists();
-   NumCoreStates     = esinterface.getNumCoreStates();
-   NumMuffinTins     = esinterface.getNumMuffinTins();
-   have_dpsi         = esinterface.getHaveDPsi();
-   NumAtomicOrbitals = esinterface.getNumAtomicOrbitals();
+   NumBands          = esinterface->getNumBands();
+   NumSpins          = esinterface->getNumSpins();
+   NumTwists         = esinterface->getNumTwists();
+   NumCoreStates     = esinterface->getNumCoreStates();
+   NumMuffinTins     = esinterface->getNumMuffinTins();
+   have_dpsi         = esinterface->getHaveDPsi();
+   NumAtomicOrbitals = esinterface->getNumAtomicOrbitals();
 
    HaveOrbDerivs = have_dpsi;
    app_log() << "bands=" << NumBands << ", elecs=" << NumElectrons
@@ -836,22 +846,22 @@ bool
   //////////////////////////////////
   app_log()<<"Species ID's"<<std::endl;
   ParticleSet::ParticleIndex_t species_ids;
-  esinterface.getSpeciesIDs(species_ids);
+  esinterface->getSpeciesIDs(species_ids);
   int num_species = species_ids.size();
   app_log() << "#Species: " << num_species << std::endl;
   for(int i=0;i<num_species;i++)
     app_log()<<"speciesids: "<<species_ids[i] << std::endl;
   Vector<int> atomic_numbers(num_species);
-  for (int isp=0; isp<num_species; isp++)
-  {
-    std::ostringstream name;
-    name << "/atoms/species_" << isp << "/atomic_number";
-    HDFAttribIO<int> h_atomic_number (atomic_numbers[isp]);
-    h_atomic_number.read(H5FileID, name.str().c_str());
-  }
+//  for (int isp=0; isp<num_species; isp++)
+//  {
+//    std::ostringstream name;
+//    name << "/atoms/species_" << isp << "/atomic_number";
+//    HDFAttribIO<int> h_atomic_number (atomic_numbers[isp]);
+//    h_atomic_number.read(H5FileID, name.str().c_str());
+//  }
   app_log()<<"Get Atomic Numbers"<<std::endl;
 
-  esinterface.getAtomicNumbers(atomic_numbers);
+  esinterface->getAtomicNumbers(atomic_numbers);
 
   for (int isp=0; isp<num_species; isp++)
     app_log()<<"speciesids: "<<species_ids[isp] << "\t"<< atomic_numbers[isp] <<std::endl;
@@ -864,12 +874,12 @@ bool
    for (int i=0; i<IonTypes.size(); i++)
      app_log() << "Atom type(" << i << ") = " << IonTypes[i] << std::endl;
    app_log()<<"get Ion Positions"<<std::endl;
-   esinterface.getIonPositions(IonPos);
+   esinterface->getIonPositions(IonPos);
    app_log()<<"got teh Positions! I think"<<std::endl;
 
-   esinterface.getAtomicOrbitals(AtomicOrbitals);
+   esinterface->getAtomicOrbitals(AtomicOrbitals);
    std::vector<double> dummy(1);
-   esinterface.getTwistData(TwistAngles, dummy, TwistSymmetry);
+   esinterface->getTwistData(TwistAngles, dummy, TwistSymmetry);
    std::cerr << TwistAngles[0] << std::endl;
 
   if(qmc_common.use_density)

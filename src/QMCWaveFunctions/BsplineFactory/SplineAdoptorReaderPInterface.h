@@ -28,6 +28,8 @@
 #include <mpi/collectives.h>
 #include <mpi/point2point.h>
 
+#include "Interfaces/ESInterfaceBase.h"
+
 namespace qmcplusplus
 {
 /** General SplineAdoptorReader to handle any unitcell
@@ -373,16 +375,20 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     int N=bandgroup.getNumDistinctOrbitals();
     Vector<std::complex<double> > cG(mybuilder->MaxNumGvecs);
     const std::vector<BandInfo>& cur_bands=bandgroup.myBands;
-    hdf_archive h5f(myComm, false);
-    h5f.open(mybuilder->H5FileName, H5F_ACC_RDONLY);
+    ESInterfaceBase* esinterface(0);
+    esinterface=mybuilder->get_interface();
+
+//    hdf_archive h5f(myComm, false);
+//    h5f.open(mybuilder->H5FileName, H5F_ACC_RDONLY);
     //this will be parallelized with OpenMP
     for(int iorb=0; iorb<N; ++iorb)
     {
       int iorb_h5   = bspline->BandIndexMap[iorb];
       int ti        = cur_bands[iorb_h5].TwistIndex;
-      std::string s = psi_g_path(ti, spin, cur_bands[iorb_h5].BandIndex);
-      if (!h5f.readEntry(cG, s))
-        APP_ABORT("SplineAdoptorReader Failed to read band(s) from h5!\n");
+      if(!esinterface->getPsi_kspace(cG, spin, iorb_h5, ti))
+//      std::string s = psi_g_path(ti, spin, cur_bands[iorb_h5].BandIndex);
+//      if (!h5f.readEntry(cG, s))
+        APP_ABORT("SplineAdoptorReader Failed to read band(s) from Interface!\n");
       //fft_spline(cG,ti,0);
       //bspline->set_spline(spline_r[0],spline_i[0],iorb);
       fft_spline(cG, ti);
