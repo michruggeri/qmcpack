@@ -22,8 +22,8 @@ void ESHDF5Interface::initialize()
    if (H5FileID < 0)
    {
      app_error() << "Could not open HDF5 file \"" << H5FileName
-                << "\" in EinsplineSetBuilder::createSPOSetFromInterface.  Aborting.\n";
-     APP_ABORT("EinsplineSetBuilder::ReadOrbitalInfo_Interface");
+                << "\" in ESHDF5Interface::initialize().  Aborting.\n";
+     APP_ABORT("ESHDF5Interface::initialize()");
    }
 }
 bool ESHDF5Interface::put(xmlNodePtr cur)
