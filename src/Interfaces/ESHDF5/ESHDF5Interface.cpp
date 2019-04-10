@@ -17,6 +17,9 @@ namespace qmcplusplus
 void ESHDF5Interface::initialize()
 {
    std::cerr << "Beginning the initialization... \n";
+   std::cerr << myComm->size() << std::endl;
+   std::cerr << myComm->rank() << std::endl;
+   if(myComm->rank()==0){
    H5FileID = H5Fopen(H5FileName.c_str(),H5F_ACC_RDWR,H5P_DEFAULT);
    app_log()<<"Opened HDF5 File for reading... " << H5FileName.c_str() << "\n";
    if (H5FileID < 0)
@@ -24,6 +27,7 @@ void ESHDF5Interface::initialize()
      app_error() << "Could not open HDF5 file \"" << H5FileName
                 << "\" in ESHDF5Interface::initialize().  Aborting.\n";
      APP_ABORT("ESHDF5Interface::initialize()");
+   }
    }
 }
 bool ESHDF5Interface::put(xmlNodePtr cur)
@@ -328,9 +332,11 @@ void ESHDF5Interface::getReducedGVecs(std::vector<std::vector<TinyVector<int,3> 
 
 bool ESHDF5Interface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin, int orbid, int twistid)
 {
+      if(myComm->rank()==0){
         std::string s=psi_g_path(twistid,spin,orbid); //Ray:  HWI (Handle with interface)
         HDFAttribIO<Vector<std::complex<double> > > h_cg(cG);
 	h_cg.read(H5FileID, s.c_str());
+      }
 	return true;	
 //        return h5f.read(cG,s); //RAY:  HWI  (Handle with interface).
 }
