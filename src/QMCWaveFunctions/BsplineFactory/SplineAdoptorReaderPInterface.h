@@ -372,29 +372,68 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
 
 void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
   {
-    int N=bandgroup.getNumDistinctOrbitals();
-    Vector<std::complex<double> > cG(mybuilder->MaxNumGvecs);
-    const std::vector<BandInfo>& cur_bands=bandgroup.myBands;
+//    int N=bandgroup.getNumDistinctOrbitals();
+//    Vector<std::complex<double> > cG(mybuilder->MaxNumGvecs);
+//    const std::vector<BandInfo>& cur_bands=bandgroup.myBands;
+
+    int Nbands            = bandgroup.getNumDistinctOrbitals();
+    const int Nprocs      = myComm->size();
+    const int Nbandgroups = std::min(Nbands, Nprocs);
+    Communicate band_group_comm(*myComm, Nbandgroups);
+    std::vector<int> band_groups(Nbandgroups + 1, 0);
+    FairDivideLow(Nbands, Nbandgroups, band_groups);
+    int iorb_first = band_groups[band_group_comm.getGroupID()];
+    int iorb_last  = band_groups[band_group_comm.getGroupID() + 1];
+    app_log() << "Start transforming plane waves to 3D B-Splines." << std::endl;
+    hdf_archive h5f(&band_group_comm, false);
+    Vector<std::complex<double>> cG(mybuilder->Gvecs[0].size());
+    const std::vector<BandInfo>& cur_bands = bandgroup.myBands;
     ESInterfaceBase* esinterface(0);
     esinterface=mybuilder->get_interface();
 
-//    hdf_archive h5f(myComm, false);
-//    h5f.open(mybuilder->H5FileName, H5F_ACC_RDONLY);
     //this will be parallelized with OpenMP
-    for(int iorb=0; iorb<N; ++iorb)
+    std::cerr << "start the loop\n";
+    for(int iorb=iorb_first; iorb<iorb_last; ++iorb)
+//    for(int iorb=0; iorb<N; ++iorb)
     {
-      int iorb_h5   = bspline->BandIndexMap[iorb];
-      int ti        = cur_bands[iorb_h5].TwistIndex;
-      if(!esinterface->getPsi_kspace(cG, spin, iorb_h5, ti))
-//      std::string s = psi_g_path(ti, spin, cur_bands[iorb_h5].BandIndex);
-//      if (!h5f.readEntry(cG, s))
-        APP_ABORT("SplineAdoptorReader Failed to read band(s) from Interface!\n");
-      //fft_spline(cG,ti,0);
-      //bspline->set_spline(spline_r[0],spline_i[0],iorb);
-      fft_spline(cG, ti);
-
-      bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
+      if (myComm->rank()==0)
+    //  if (band_group_comm.isGroupLeader())
+      {
+        int iorb_h5   = bspline->BandIndexMap[iorb];
+        int ti        = cur_bands[iorb_h5].TwistIndex;
+        std::cerr << iorb << "\t" << iorb_h5 << "\t"<<  ti << "\t" << "call getPsi_kspace\n";
+        if(!esinterface->getPsi_kspace(cG, spin, iorb_h5, ti))
+          APP_ABORT("SplineAdoptorReader Failed to read band(s) from Interface!\n");
+        std::cerr << "Compute norm\n";
+        double total_norm = compute_norm(cG);
+        if ((checkNorm) && (std::abs(total_norm - 1.0) > PW_COEFF_NORM_TOLERANCE))
+        {
+          std::cerr << "The orbital " << iorb_h5 << " has a wrong norm " << total_norm
+                    << ", computed from plane wave coefficients!" << std::endl
+                    << "This may indicate a problem with the HDF5 library versions used "
+                    << "during wavefunction conversion or read." << std::endl;
+          APP_ABORT("SplineAdoptorReaderInterface Wrong orbital norm!");
+        }
+        std::cerr << "fft_spline\n";
+        fft_spline(cG, ti);
+        std::cerr << "set spline\n";
+        bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
+      }  
+      this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
     }
+//    mpi::bcast(*myComm,cG);
+    myComm->barrier();
+    Timer now;
+//    if (myComm->rank()==0)
+//    if (band_group_comm.isGroupLeader())
+    {
+      now.restart();
+      bspline->gather_tables(band_group_comm.GroupLeaderComm);
+      app_log() << "  Time to gather the table = " << now.elapsed() << std::endl;
+    }
+    now.restart();
+    bspline->bcast_tables(myComm);
+    app_log() << "  Time to bcast the table = " << now.elapsed() << std::endl;
   }
 
 

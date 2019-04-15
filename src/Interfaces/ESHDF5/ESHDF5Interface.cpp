@@ -332,13 +332,17 @@ void ESHDF5Interface::getReducedGVecs(std::vector<std::vector<TinyVector<int,3> 
 
 bool ESHDF5Interface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin, int orbid, int twistid)
 {
+
       if(myComm->rank()==0){
+
         std::string s=psi_g_path(twistid,spin,orbid); //Ray:  HWI (Handle with interface)
         HDFAttribIO<Vector<std::complex<double> > > h_cg(cG);
-	h_cg.read(H5FileID, s.c_str());
+        std::cerr << "aaaa\n";
+        h_cg.read(H5FileID, s.c_str());
+        std::cerr << "bbbb\n";
       }
-	return true;	
-//        return h5f.read(cG,s); //RAY:  HWI  (Handle with interface).
+        return true;	
+        //return h5f.read(cG,s); //RAY:  HWI  (Handle with interface).
 }
 
 }
