@@ -175,7 +175,7 @@ public:
                                    std::vector<RealType>& dlogpsi, 
                                    std::vector<RealType>& dhpsioverpsi,
                                    const ValueType& psiCurrent,
-                                   const std::vector<RealType>& Coeff,
+                                   const std::vector<ValueType>& Coeff,
                                    const std::vector<size_t>& C2node_up,
                                    const std::vector<size_t>& C2node_dn,
                                    const ValueVector_t& detValues_up, 
@@ -254,7 +254,19 @@ public:
    */
   virtual void
   evaluate(const ParticleSet& P, int iat,
-           ValueVector_t& psi, GradVector_t& dpsi, HessVector_t& grad_grad_psi)=0;
+           ValueVector_t& psi, GradVector_t& dpsi, HessVector_t& grad_grad_psi);
+
+  /** evaluate the values, gradients, hessians, and grad hessians of this single-particle orbital set
+   * @param P current ParticleSet
+   * @param iat active particle
+   * @param psi values of the SPO
+   * @param dpsi gradients of the SPO
+   * @param grad_grad_psi hessians of the SPO
+   * @param grad_grad_grad_psi grad hessians of the SPO
+   */
+  virtual void
+  evaluate(const ParticleSet& P, int iat,
+           ValueVector_t& psi, GradVector_t& dpsi, HessVector_t& grad_grad_psi, GGGVector_t& grad_grad_grad_psi);
 
   /** evaluate the third derivatives of this single-particle orbital set
    * @param P current ParticleSet
