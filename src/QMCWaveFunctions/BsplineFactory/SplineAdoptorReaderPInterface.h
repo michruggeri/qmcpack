@@ -430,19 +430,19 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     }
   }
 //    myComm->barrier();
-    Timer now;
+//    Timer now;
 //    if (myComm->rank()==0)  // If we use this guy everything gets stuck --> check if rank 0 appears somewhere else!
-    if (band_group_comm.isGroupLeader())
-    {
-      now.restart();
-      bspline->gather_tables(band_group_comm.GroupLeaderComm);   // I think it's this guy
+//    if (band_group_comm.isGroupLeader())
+//    {
+//      now.restart();
+//      bspline->gather_tables(band_group_comm.GroupLeaderComm);   // I think it's this guy
 //      bspline->gather_tables(myComm);   // I think it's this guy
-      app_log() << "  Time to gather the table = " << now.elapsed() << std::endl;
-      std::cerr  << "Group leader rank: " << band_group_comm.GroupLeaderComm->rank() << std::endl;  
-    now.restart();
-    bspline->bcast_tables(myComm);
-    app_log() << "  Time to bcast the table = " << now.elapsed() << std::endl;
-    }
+//      app_log() << "  Time to gather the table = " << now.elapsed() << std::endl;
+//      std::cerr  << "Group leader rank: " << band_group_comm.GroupLeaderComm->rank() << std::endl;  
+//    now.restart();
+//    bspline->bcast_tables(myComm);
+//    app_log() << "  Time to bcast the table = " << now.elapsed() << std::endl;
+//    }
 
     }
 
