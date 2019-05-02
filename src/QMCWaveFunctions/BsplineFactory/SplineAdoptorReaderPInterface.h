@@ -379,13 +379,13 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     int Nbands            = bandgroup.getNumDistinctOrbitals();
     const int Nprocs      = myComm->size();
     const int Nbandgroups = std::min(Nbands, Nprocs);
-//    Communicate band_group_comm(*myComm, Nbandgroups);
+    Communicate band_group_comm(*myComm, Nbandgroups);
     std::vector<int> band_groups(Nbandgroups + 1, 0);
     FairDivideLow(Nbands, Nbandgroups, band_groups);
-//    int iorb_first = band_groups[band_group_comm.getGroupID()];
-//    int iorb_last  = band_groups[band_group_comm.getGroupID() + 1];
+    int iorb_first = band_groups[band_group_comm.getGroupID()];
+    int iorb_last  = band_groups[band_group_comm.getGroupID() + 1];
     app_log() << "Start transforming plane waves to 3D B-Splines." << std::endl;
-//    hdf_archive h5f(&band_group_comm, false);
+    hdf_archive h5f(&band_group_comm, false);
     Vector<std::complex<double>> cG(mybuilder->Gvecs[0].size());
     const std::vector<BandInfo>& cur_bands = bandgroup.myBands;
     ESInterfaceBase* esinterface(0);
@@ -393,18 +393,23 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
 
     //this will be parallelized with OpenMP
     std::cerr << "I am in inzialize spline slow, and I am rank " << myComm->rank() << std::endl;
-//    for(int iorb=iorb_first; iorb<iorb_last; ++iorb)
-      if (myComm->rank()==0){
+{
+    //for(int iorb=iorb_first; iorb<iorb_last; ++iorb)
     for(int iorb=0; iorb<Nbands; ++iorb)
     {
-//      if (band_group_comm.isGroupLeader())
+//    if (band_group_comm.isGroupLeader())
+    if (myComm->rank()==0)
       {
         int iorb_h5   = bspline->BandIndexMap[iorb];
         int ti        = cur_bands[iorb_h5].TwistIndex;
         std::cerr << iorb << "\t" << iorb_h5 << "\t"<<  ti << "\t" << "call getPsi_kspace\n";
         if(!esinterface->getPsi_kspace(cG, spin, iorb_h5, ti))
           APP_ABORT("SplineAdoptorReader Failed to read band(s) from Interface!\n");
-        std::cerr << "Compute norm\n";
+      }
+    mpi::bcast(*myComm,cG);
+        int iorb_h5   = bspline->BandIndexMap[iorb];
+        int ti        = cur_bands[iorb_h5].TwistIndex;
+        std::cerr << "Compute norm at rank " << myComm->rank() << std::endl;
         double total_norm = compute_norm(cG);
         if ((checkNorm) && (std::abs(total_norm - 1.0) > PW_COEFF_NORM_TOLERANCE))
         {
@@ -414,31 +419,32 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
                     << "during wavefunction conversion or read." << std::endl;
           APP_ABORT("SplineAdoptorReaderInterface Wrong orbital norm!");
         }
+//    if (myComm->rank()==0)
+      {
         std::cerr << "fft_spline\n";
         fft_spline(cG, ti);
         std::cerr << "set spline\n";
         bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
       }  
-//      this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
+      this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
     }
-//    mpi::bcast(*myComm,cG);
-    }
+  }
 //    myComm->barrier();
     Timer now;
 //    if (myComm->rank()==0)  // If we use this guy everything gets stuck --> check if rank 0 appears somewhere else!
-//    if (band_group_comm.isGroupLeader())
+    if (band_group_comm.isGroupLeader())
     {
       now.restart();
-      //bspline->gather_tables(band_group_comm.GroupLeaderComm);   // I think it's this guy
-      bspline->gather_tables(myComm);   // I think it's this guy
+      bspline->gather_tables(band_group_comm.GroupLeaderComm);   // I think it's this guy
+//      bspline->gather_tables(myComm);   // I think it's this guy
       app_log() << "  Time to gather the table = " << now.elapsed() << std::endl;
- //   }
+      std::cerr  << "Group leader rank: " << band_group_comm.GroupLeaderComm->rank() << std::endl;  
     now.restart();
     bspline->bcast_tables(myComm);
     app_log() << "  Time to bcast the table = " << now.elapsed() << std::endl;
     }
-  }
 
+    }
 
 };
 } // namespace qmcplusplus

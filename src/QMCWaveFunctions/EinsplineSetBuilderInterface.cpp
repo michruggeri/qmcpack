@@ -68,6 +68,8 @@ esinterface(0)
   //and input file should be parsed.
   ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
   myint = new ESHDF5Interface(myComm);
+ // ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+ // myint = new ESPWSCFInterface(myComm);
   esinterface=static_cast<ESInterfaceBase*>(myint);
   esinterface->initialize();
 }
