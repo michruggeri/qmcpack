@@ -66,10 +66,10 @@ esinterface(0)
   //For interface debugging.
   //Proper construction of interface should be done in some put(xml) command,
   //and input file should be parsed.
-  ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
-  myint = new ESHDF5Interface(myComm);
- // ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
- // myint = new ESPWSCFInterface(myComm);
+//  ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+//  myint = new ESHDF5Interface(myComm);
+  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+  myint = new ESPWSCFInterface(myComm);
   esinterface=static_cast<ESInterfaceBase*>(myint);
   esinterface->initialize();
 }

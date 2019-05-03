@@ -21,7 +21,8 @@ void ESPWSCFInterface::initialize()
   app_log()<<"ESPWSCFInterface::initialize().  initialized="<<initialized<<std::endl;
   if (initialized==false)
   {
-    int commID = myComm->getMPI();
+    //int commID = myComm->getMPI();
+    int commID = myComm->rank();
     //app_log()<<" ESPWSCFInterface::initialize() commID = "<<commID<<" or "<<myComm->getComm().Get_mpi()<<std::endl;
     //app_log()<<" MPI_WORLD_COMM = "<<MPI_COMM_WORLD<<std::endl;
     pwlib_init_(&commID);
