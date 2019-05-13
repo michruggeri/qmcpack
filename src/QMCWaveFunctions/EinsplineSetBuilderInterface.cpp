@@ -769,19 +769,19 @@ bool
    //Tensor<double,OHMMS_DIM> Lattice, RecipLattice, LatticeInv, GGt;
    //Tensor<int,OHMMS_DIM> TileMatrix;
 
-   std::cerr << "Declare the pointer to ESHDF5interface...";
+   //std::cerr << "Declare the pointer to ESHDF5interface...";
    //ESHDF5Interface esinterface;
-   std::cerr << "  Done!\n";
+   //std::cerr << "  Done!\n";
 
-   std::cerr << "Initialize it... \n";
-   esinterface->initialize();
-   std::cerr << "  Done!\n";
+   //std::cerr << "Initialize it... \n";
+   //esinterface->initialize();
+   //std::cerr << "  Done!\n";
 
    esinterface->getVersion();
 
-   std::cerr << "Getting primitive vectors...";
+   //std::cerr << "Getting primitive vectors...";
    esinterface->getPrimVecs(Lattice);
-   std::cerr << "  Done!\n";
+   //std::cerr << "  Done!\n";
  
 //   OHMMS::Controller->barrier();
 //   std::cerr << "Barrier: seems to be working\n";
@@ -819,6 +819,7 @@ bool
    int have_dpsi = false;
    int NumAtomicOrbitals = 0;
    NumCoreStates = NumMuffinTins = NumTwists = NumSpins = NumBands = NumAtomicOrbitals = 0;
+std::cout << "Starting to extract information...   ";
    NumElectrons=TargetPtcl.getTotalNum();
 
 //   OHMMS::Controller->barrier();
@@ -830,7 +831,8 @@ bool
    NumMuffinTins     = esinterface->getNumMuffinTins();
    have_dpsi         = esinterface->getHaveDPsi();
    NumAtomicOrbitals = esinterface->getNumAtomicOrbitals();
-
+   int num_species    = esinterface->getNumSpecies();
+std::cout << "Done!\n";
    HaveOrbDerivs = have_dpsi;
    app_log() << "bands=" << NumBands << ", elecs=" << NumElectrons
              << ", spins=" << NumSpins << ", twists=" << NumTwists
@@ -846,8 +848,8 @@ bool
   //////////////////////////////////
   app_log()<<"Species ID's"<<std::endl;
   ParticleSet::ParticleIndex_t species_ids;
-  esinterface->getSpeciesIDs(species_ids);
-  int num_species = species_ids.size();
+  esinterface->getSpeciesIDs(species_ids);  
+  //int num_species = species_ids.size();  // this is actually the number of atoms
   app_log() << "#Species: " << num_species << std::endl;
   for(int i=0;i<num_species;i++)
     app_log()<<"speciesids: "<<species_ids[i] << std::endl;
@@ -862,7 +864,7 @@ bool
   app_log()<<"Get Atomic Numbers"<<std::endl;
 
   esinterface->getAtomicNumbers(atomic_numbers);
-
+  app_log()<<"success?\n";
   for (int isp=0; isp<num_species; isp++)
     app_log()<<"speciesids: "<<species_ids[isp] << "\t"<< atomic_numbers[isp] <<std::endl;
   IonTypes.resize(species_ids.size());
@@ -879,8 +881,9 @@ bool
 
    esinterface->getAtomicOrbitals(AtomicOrbitals);
    std::vector<double> dummy(1);
+   std::cerr << "I'm trying to read the twists!\n";
    esinterface->getTwistData(TwistAngles, dummy, TwistSymmetry);
-   std::cerr << TwistAngles[0] << std::endl;
+   std::cerr << "I did read the twists!\t" << TwistAngles[0] << std::endl;
 
   if(qmc_common.use_density)
   {

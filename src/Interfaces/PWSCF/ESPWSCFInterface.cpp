@@ -23,8 +23,8 @@ void ESPWSCFInterface::initialize()
   {
     //int commID = myComm->getMPI();
     int commID = myComm->rank();
-    //app_log()<<" ESPWSCFInterface::initialize() commID = "<<commID<<" or "<<myComm->getComm().Get_mpi()<<std::endl;
-    //app_log()<<" MPI_WORLD_COMM = "<<MPI_COMM_WORLD<<std::endl;
+    app_log()<<" ESPWSCFInterface::initialize() commID = "<<commID<<std::endl;
+    app_log()<<" MPI_WORLD_COMM = "<<MPI_COMM_WORLD<<std::endl;
     pwlib_init_(&commID);
     pwlib_scf_();
     initialized=true;
@@ -113,12 +113,16 @@ void ESPWSCFInterface::getSpeciesIDs(ParticleIndex_t& species_ids)
   if (nat==-1 || nsp==-1) pwlib_getatom_info_(&nat, &nsp);
   double Rtmp[nat][3];
  
+  std::cerr << "weeeeeeeeeee\t" << nat << "   " << nsp << std::endl;
   species_ids.resize(nat);
  
   pwlib_getatom_data_(Rtmp[0], &species_ids[0]);
+  std::cerr << "aaaaaaaaaaae\t" << nat << "   " << nsp << std::endl;
 
-  for (int i=0; i<nat; i++) species_ids[i]-=1; //this is because pwscf is a fotran code, and so indexing starts at 1 instead of 0.
-
+  for (int i=0; i<nat; i++){
+    species_ids[i]-=1; //this is because pwscf is a fotran code, and so indexing starts at 1 instead of 0.
+    std::cout << "atom " << i << "  species " << species_ids[i] << std::endl;
+  };
   return;
 }
 
@@ -141,14 +145,26 @@ void ESPWSCFInterface::getSpeciesData(Vector<int> & am, Vector<int> & q, Vector<
 void ESPWSCFInterface::getAtomicNumbers(Vector<int> & am)
 {
   if (nat==-1 || nsp==-1) pwlib_getatom_info_(&nat, &nsp);
+  std::cerr << "aassrasrsaaaaae\t" << nat << "   " << nsp << std::endl;
   am.resize(nsp);
-  
+  nsp+=7; // This guy and its partner below are here because using nsp for the sizing leads to stack smashing/segfaulting; this will 
+           // do for now but it should really be fixed in a proper way at some point -- For my test 3 is the least increment that avoids crashes
   int vcharg[nsp];
   double mass[nsp];
   char names[nsp*3];
-
-  pwlib_getspecies_data_(&am[0], vcharg, mass, names );
+  nsp-=7; // See comment above
+  for(int i=0;i<nsp;i++){
+    vcharg[i] = -1;
+    mass[i] = -0.5;
+    am[i]   =3;
+  };
+  std::cerr << "azz\t";
+  std::cerr<< nsp << " " << vcharg[0] << "  " << mass[0] << " " << am[0] << " " <<  names[0] << std::endl;
+  pwlib_getspecies_data_(&am[0], vcharg, mass, names);
   
+  std::cerr << "aassrasrsaaaaae\t" << nat << "   " << nsp << std::endl;
+  std::cerr << "azz\t";
+  std::cerr<< nsp << " " << vcharg[0] << "  " << mass[0] << " " << am[0] << " " << names[0] << std::endl;
   return;
 }
 
@@ -216,13 +232,12 @@ void ESPWSCFInterface::getTwistData(std::vector<PosType>& TwistAngles,
    if(nktot<0) pwlib_getwfn_info_(&nbands, &nktot, &nkloc, mesh, &ngtot, &npw, &npwx );
    
    double klist_tmp[nktot][3];
-   
    TwistAngles.resize(nktot);
    TwistWeight.resize(nktot);
    TwistSymmetry.resize(nktot);
-
-   pwlib_getwfn_kpoints_( klist_tmp[0], &TwistWeight[0]);
-
+   std::cerr << "calling getwfn_kpoints... I have " << nktot << " kpoints btw\n";
+   pwlib_getwfn_kpoints_(&klist_tmp[0][0], &TwistWeight[0]);
+   std::cerr << "Done!\n";
    for (int i=0; i<nktot; i++)
    {
      for(int j=0; j<OHMMS_DIM; j++) TwistAngles[i][j]=klist_tmp[i][j]; 
