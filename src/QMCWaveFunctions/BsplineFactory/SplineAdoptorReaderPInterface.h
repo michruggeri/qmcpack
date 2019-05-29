@@ -254,8 +254,11 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
    */
   inline void fft_spline(Vector<std::complex<double>>& cG, int ti)
   {
+    std::cerr << "starting fft_spline... " << cG[0] << "\t" << ti << std::endl;
     unpack4fftw(cG, mybuilder->Gvecs[0], MeshSize, FFTbox);
+    std::cerr << "unpacking: done.\n";
     fftw_execute(FFTplan);
+    std::cerr << "preliminiaries: done.\n";
     if (bspline->is_complex)
     {
       fix_phase_rotate_c2c(FFTbox, splineData_r, splineData_i, mybuilder->TwistAngles[ti], rotate_phase_r,
@@ -268,6 +271,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       fix_phase_rotate_c2r(FFTbox, splineData_r, mybuilder->TwistAngles[ti], rotate_phase_r, rotate_phase_i);
       einspline::set(spline_r, splineData_r.data());
     }
+    std::cerr << "fft_spline: done. \n";
   }
 
 
@@ -385,7 +389,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     int iorb_first = band_groups[band_group_comm.getGroupID()];
     int iorb_last  = band_groups[band_group_comm.getGroupID() + 1];
     app_log() << "Start transforming plane waves to 3D B-Splines." << std::endl;
-    hdf_archive h5f(&band_group_comm, false);
+//    hdf_archive h5f(&band_group_comm, false);
     Vector<std::complex<double>> cG(mybuilder->Gvecs[0].size());
     const std::vector<BandInfo>& cur_bands = bandgroup.myBands;
     ESInterfaceBase* esinterface(0);
@@ -410,7 +414,9 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
         int iorb_h5   = bspline->BandIndexMap[iorb];
         int ti        = cur_bands[iorb_h5].TwistIndex;
         std::cerr << "Compute norm at rank " << myComm->rank() << std::endl;
+        std::cerr << cG[0] << std::endl;
         double total_norm = compute_norm(cG);
+        std::cerr << "Norm\t" << total_norm << std::endl; 
         if ((checkNorm) && (std::abs(total_norm - 1.0) > PW_COEFF_NORM_TOLERANCE))
         {
           std::cerr << "The orbital " << iorb_h5 << " has a wrong norm " << total_norm

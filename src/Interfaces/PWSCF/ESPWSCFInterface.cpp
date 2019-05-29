@@ -276,7 +276,13 @@ void ESPWSCFInterface::getReducedGVecs(std::vector<std::vector<TinyVector<int,3>
   {
     for(int j=0; j<OHMMS_DIM; j++) gvecs[0][i][j]=gvec_tmp[i][j];
   }
-  
+  /*std::cerr << "writing gvecs... \n";
+  for (int i=0; i<ngtot; i++)
+  {
+    for(int j=0; j<OHMMS_DIM; j++) std::cerr << gvecs[0][i][j] << "\t" ;
+    std::cerr << std::endl;
+  }
+  */
 }
 
 //bool ESPWSCFInterface::getPsi_kspace(Vector<complex<double> > & Cg, int orbid, int twistid)
@@ -299,8 +305,11 @@ bool ESPWSCFInterface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin
   pwlib_getwfn_band_((double*) cgtmp[0], &pworbid, &pwtwistid);
 
   for(int i=0; i<ngtot; i++)  cG[i]=std::complex<double>(cgtmp[i][0], cgtmp[i][1]); //fftw_complex is a typedef of double x[2].  
-  
+  std::cerr<<"WEQWEQWE QWrsaf df\t" << cG[0] << std::endl; 
   
 }
 
+void getParticleSet(ParticleSet& P){
+  return;
+};
 }

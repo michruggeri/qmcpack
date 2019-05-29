@@ -57,7 +57,10 @@ struct BsplineReaderInterface
   inline bool set_grid(const TinyVector<int, 3>& halfg, GT* xyz_grid, BCT* xyz_bc)
   {
     //This sets MeshSize from the input file
-    bool havePsig = mybuilder->ReadGvectors_ESHDF();
+    //bool havePsig = true;// AAAAAAAAA 
+    //mybuilder->ReadGvectors();
+    //bool havePsig = mybuilder->ReadGvectors_ESHDF();
+    bool havePsig = mybuilder->ReadGvectors_PWSCF();
 
     //If this MeshSize is not initialized, use the meshsize set by the input based on FFT grid and meshfactor
     if (MeshSize[0] == 0)

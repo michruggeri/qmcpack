@@ -213,6 +213,7 @@ public:
    * @return true, if psi_g is found
    */
   bool ReadGvectors_ESHDF();
+  bool ReadGvectors_PWSCF();
 
   /** set tiling properties of oset
    * @param oset spline-orbital engine to be initialized
