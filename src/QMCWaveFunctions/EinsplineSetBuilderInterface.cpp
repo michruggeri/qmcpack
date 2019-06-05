@@ -770,11 +770,13 @@ bool
    //Tensor<int,OHMMS_DIM> TileMatrix;
 
    //std::cerr << "Declare the pointer to ESHDF5interface...";
-   //ESHDF5Interface esinterface;
+  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+  myint = new ESPWSCFInterface(myComm);
+  esinterface=static_cast<ESInterfaceBase*>(myint);
    //std::cerr << "  Done!\n";
 
    //std::cerr << "Initialize it... \n";
-   //esinterface->initialize();
+   esinterface->initialize();
    //std::cerr << "  Done!\n";
 
    esinterface->getVersion();
