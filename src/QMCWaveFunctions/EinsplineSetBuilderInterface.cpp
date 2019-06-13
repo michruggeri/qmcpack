@@ -68,10 +68,10 @@ esinterface(0)
   //and input file should be parsed.
 //  ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
 //  myint = new ESHDF5Interface(myComm);
-  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
-  myint = new ESPWSCFInterface(myComm);
-  esinterface=static_cast<ESInterfaceBase*>(myint);
-  esinterface->initialize();
+//  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+//  myint = new ESPWSCFInterface(myComm);
+//  esinterface=static_cast<ESInterfaceBase*>(myint);
+//  esinterface->initialize();
 }
 
 template<typename T>
@@ -357,14 +357,15 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 // Read the basic orbital information, without reading all the //
 // orbitals themselves.                                        //
 /////////////////////////////////////////////////////////////////
-  if (myComm->rank() == 0)
+  myComm->barrier();
+//  if (myComm->rank() == 0)
     if (!ReadOrbitalInfo())
     {
       app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
   app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
-//  myComm->barrier();
+  myComm->barrier();
   orb_info_timer.restart();
   BroadcastOrbitalInfo();
 
@@ -768,22 +769,23 @@ bool
    //int NumCoreStates , NumMuffinTins , NumTwists , NumSpins , NumBands , NumAtomicOrbitals, NumElectrons;
    //Tensor<double,OHMMS_DIM> Lattice, RecipLattice, LatticeInv, GGt;
    //Tensor<int,OHMMS_DIM> TileMatrix;
-
    //std::cerr << "Declare the pointer to ESHDF5interface...";
   ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
   myint = new ESPWSCFInterface(myComm);
   esinterface=static_cast<ESInterfaceBase*>(myint);
-   //std::cerr << "  Done!\n";
+   std::cerr << myComm->rank() << "e' il rank!\n";
 
-   //std::cerr << "Initialize it... \n";
+   std::cerr << "Initialize it... \n";
    esinterface->initialize();
-   //std::cerr << "  Done!\n";
+   std::cerr << "  Done!\n";
 
-   esinterface->getVersion();
 
-   //std::cerr << "Getting primitive vectors...";
-   esinterface->getPrimVecs(Lattice);
-   esinterface->getPrimVecs(SuperLattice);
+   OHMMS::Controller->barrier();
+///   if(myComm->rank()==0){
+     std::cerr << "Getting primitive vectors...";
+     esinterface->getVersion();
+     esinterface->getPrimVecs(Lattice);
+     esinterface->getPrimVecs(SuperLattice);
    //std::cerr << "  Done!\n";
  
 //   OHMMS::Controller->barrier();
@@ -812,10 +814,11 @@ bool
              SuperLattice(0,0), SuperLattice(0,1), SuperLattice(0,2),
              SuperLattice(1,0), SuperLattice(1,1), SuperLattice(1,2),
              SuperLattice(2,0), SuperLattice(2,1), SuperLattice(2,2));
-   std::cerr<< "asdasdasdasdasda \n";
-   CheckLattice();
+//   std::cerr << myComm->rank() << "  asdasdasdasdasda \n";
 //   OHMMS::Controller->barrier();
-
+//   if(myComm->rank()==0)
+     CheckLattice();
+//   OHMMS::Controller->barrier();
    app_log() << buff;
    for (int i=0; i<3; i++)
      for (int j=0; j<3; j++)
@@ -1000,10 +1003,11 @@ std::cout << "Done!\n";
     app_log() << "   Skip initialization of the density" << std::endl;
   }
 
-  std::cerr << myComm->rank() << "\t" << NumAtomicOrbitals << std::endl; 
+  std::cerr << "Success?" << std::endl; 
    // AAAAAAAAAAAAAAAAA
 //   esinterface->getReducedGVecs(Gvecs,0);
 //   exit(0);
+///   } // THIS REFERS TO THE RANK=0 CONDITION
    return true;
  }
 
