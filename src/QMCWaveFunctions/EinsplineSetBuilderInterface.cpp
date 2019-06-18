@@ -357,15 +357,16 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 // Read the basic orbital information, without reading all the //
 // orbitals themselves.                                        //
 /////////////////////////////////////////////////////////////////
-  myComm->barrier();
+//  myComm->barrier();
 //  if (myComm->rank() == 0)
     if (!ReadOrbitalInfo())
     {
       app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
+  std::cerr << "Do I get here?" << std::endl;
   app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
-  myComm->barrier();
+//  myComm->barrier();
   orb_info_timer.restart();
   BroadcastOrbitalInfo();
 
@@ -780,8 +781,8 @@ bool
    std::cerr << "  Done!\n";
 
 
-   OHMMS::Controller->barrier();
-///   if(myComm->rank()==0){
+   //OHMMS::Controller->barrier();
+   //if(myComm->rank()==0){
      std::cerr << "Getting primitive vectors...";
      esinterface->getVersion();
      esinterface->getPrimVecs(Lattice);
@@ -1007,7 +1008,7 @@ std::cout << "Done!\n";
    // AAAAAAAAAAAAAAAAA
 //   esinterface->getReducedGVecs(Gvecs,0);
 //   exit(0);
-///   } // THIS REFERS TO THE RANK=0 CONDITION
+//   } // THIS REFERS TO THE RANK=0 CONDITION
    return true;
  }
 
