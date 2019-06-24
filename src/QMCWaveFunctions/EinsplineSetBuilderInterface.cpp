@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 #include "qmc_common.h"
 
-#include "Particle/DistanceTable.h"
+//#include "Particle/DistanceTable.h"
 #include "OhmmsData/AttributeSet.h"
 #include "Utilities/Timer.h"
 #include "Message/Communicate.h"
