@@ -318,7 +318,7 @@ ParticleSet* ParticleSetPool::createInterfaceParticleSet(xmlNodePtr cur, Particl
     app_log()<<"make reset\n";
     ions->Lattice.reset();
     app_log()<<"make real grid\n";
-    ions->Lattice.makeGrid(grid);
+    //ions->Lattice.makeGrid(grid);
 
     myPool[source]=ions;
   }

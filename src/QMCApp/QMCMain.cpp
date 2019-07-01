@@ -493,9 +493,9 @@ bool QMCMain::validateXML()
     ptclPool->setInterface(intfcbuilder->getPtclInterface());
     psiPool->setInterface(intfcbuilder->getSPOInterface());
 
-    if (intfcbuilder->getPtclInterface() != 0){
-       ptclPool->createInterfaceParticleSet(intfcbuilder->getPtclNode(),0);
-    }
+    //if (intfcbuilder->getPtclInterface() != 0){
+    //   ptclPool->createInterfaceParticleSet(intfcbuilder->getPtclNode(),0);
+    //}
   }
 ////////////////////////////////////////////
 
