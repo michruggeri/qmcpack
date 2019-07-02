@@ -113,11 +113,11 @@ void ESPWSCFInterface::getSpeciesIDs(ParticleIndex_t& species_ids)
   if (nat==-1 || nsp==-1) pwlib_getatom_info_(&nat, &nsp);
   double Rtmp[nat][3];
  
-  std::cerr << "weeeeeeeeeee\t" << nat << "   " << nsp << std::endl;
+  std::cout << "In ESPWSCFInterface::getSpeciesIDs; number of atoms:\t" << nat << ", number of species:\t" << nsp << std::endl;
   species_ids.resize(nat);
  
   pwlib_getatom_data_(Rtmp[0], &species_ids[0]);
-  std::cerr << "aaaaaaaaaaae\t" << nat << "   " << nsp << std::endl;
+  std::cout << "After pwlib_getatom_data_; number of atoms:\t" << nat << ", number of species:\t" << nsp << std::endl;
 
   for (int i=0; i<nat; i++){
     species_ids[i]-=1; //this is because pwscf is a fotran code, and so indexing starts at 1 instead of 0.
@@ -145,10 +145,10 @@ void ESPWSCFInterface::getSpeciesData(Vector<int> & am, Vector<int> & q, Vector<
 void ESPWSCFInterface::getAtomicNumbers(Vector<int> & am)
 {
   if (nat==-1 || nsp==-1) pwlib_getatom_info_(&nat, &nsp);
-  std::cerr << "aassrasrsaaaaae\t" << nat << "   " << nsp << std::endl;
+  std::cout << "In getAtomicNumbers, checking nat and nsp (as above)\t" << nat << "   " << nsp << std::endl;
   am.resize(nsp);
   nsp+=7; // This guy and its partner below are here because using nsp for the sizing leads to stack smashing/segfaulting; this will 
-           // do for now but it should really be fixed in a proper way at some point -- For my test 3 is the least increment that avoids crashes
+           // do for now but it should really be fixed in a proper way at some point -- For my test this is the least increment that avoids crashes
   int vcharg[nsp];
   double mass[nsp];
   char names[nsp*3];
@@ -158,13 +158,11 @@ void ESPWSCFInterface::getAtomicNumbers(Vector<int> & am)
     mass[i] = -0.5;
     am[i]   =3;
   };
-  std::cerr << "azz\t";
-  std::cerr<< nsp << " " << vcharg[0] << "  " << mass[0] << " " << am[0] << " " <<  names[0] << std::endl;
+  std::cout << "Initialized arrays before pwlib_getspecies_data_\t";
+  std::cout << nsp << " " << vcharg[0] << "  " << mass[0] << " " << am[0] << " " <<  names[0] << std::endl;
   pwlib_getspecies_data_(&am[0], vcharg, mass, names);
-  
-  std::cerr << "aassrasrsaaaaae\t" << nat << "   " << nsp << std::endl;
-  std::cerr << "azz\t";
-  std::cerr<< nsp << " " << vcharg[0] << "  " << mass[0] << " " << am[0] << " " << names[0] << std::endl;
+  std::cout << "After pwlib_getspecies_data_:\t";
+  std::cout << nsp << " " << vcharg[0] << "  " << mass[0] << " " << am[0] << " " << names[0] << std::endl;
   return;
 }
 
@@ -235,9 +233,9 @@ void ESPWSCFInterface::getTwistData(std::vector<PosType>& TwistAngles,
    TwistAngles.resize(nktot);
    TwistWeight.resize(nktot);
    TwistSymmetry.resize(nktot);
-   std::cerr << "calling getwfn_kpoints... I have " << nktot << " kpoints btw\n";
+   std::cout << "calling getwfn_kpoints... I have " << nktot << " kpoints\n";
    pwlib_getwfn_kpoints_(&klist_tmp[0][0], &TwistWeight[0]);
-   std::cerr << "Done!\n";
+   std::cout << "Done!\n";
    for (int i=0; i<nktot; i++)
    {
      for(int j=0; j<OHMMS_DIM; j++) TwistAngles[i][j]=klist_tmp[i][j]; 
@@ -305,7 +303,8 @@ bool ESPWSCFInterface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin
   pwlib_getwfn_band_((double*) cgtmp[0], &pworbid, &pwtwistid);
 
   for(int i=0; i<ngtot; i++)  cG[i]=std::complex<double>(cgtmp[i][0], cgtmp[i][1]); //fftw_complex is a typedef of double x[2].  
-  std::cerr<<"WEQWEQWE QWrsaf df\t" << cG[0] << std::endl; 
+  std::cout<<"The complex coefficient cG[0] is \t" << cG[0] << std::endl; 
+  //return false;   // MR: this allows to reproduce the crash reported by RC!!!
   
 }
 

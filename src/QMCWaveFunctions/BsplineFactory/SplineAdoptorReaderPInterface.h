@@ -254,11 +254,11 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
    */
   inline void fft_spline(Vector<std::complex<double>>& cG, int ti)
   {
-    std::cerr << "starting fft_spline... " << cG[0] << "\t" << ti << std::endl;
+    std::cout << "starting fft_spline... " << cG[0] << "\t" << ti << std::endl;
     unpack4fftw(cG, mybuilder->Gvecs[0], MeshSize, FFTbox);
-    std::cerr << "unpacking: done.\n";
+    std::cout << "unpacking: done.\n";
     fftw_execute(FFTplan);
-    std::cerr << "preliminiaries: done.\n";
+    std::cout << "fftw_execute(FFTplan): done.\n";
     if (bspline->is_complex)
     {
       fix_phase_rotate_c2c(FFTbox, splineData_r, splineData_i, mybuilder->TwistAngles[ti], rotate_phase_r,
@@ -271,7 +271,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       fix_phase_rotate_c2r(FFTbox, splineData_r, mybuilder->TwistAngles[ti], rotate_phase_r, rotate_phase_i);
       einspline::set(spline_r, splineData_r.data());
     }
-    std::cerr << "fft_spline: done. \n";
+    std::cout << "fft_spline: done. \n";
   }
 
 
@@ -396,7 +396,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     esinterface=mybuilder->get_interface();
 
     //this will be parallelized with OpenMP
-    std::cerr << "I am in inzialize spline slow, and I am rank " << myComm->rank() << std::endl;
+    std::cout << "I am in inzialize spline slow, and I am rank " << myComm->rank() << std::endl;
 {
     //for(int iorb=iorb_first; iorb<iorb_last; ++iorb)
     for(int iorb=0; iorb<Nbands; ++iorb)
@@ -406,17 +406,17 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
       {
         int iorb_h5   = bspline->BandIndexMap[iorb];
         int ti        = cur_bands[iorb_h5].TwistIndex;
-        std::cerr << iorb << "\t" << iorb_h5 << "\t"<<  ti << "\t" << "call getPsi_kspace\n";
+        std::cout << iorb << "\t" << iorb_h5 << "\t"<<  ti << "\t" << "calling getPsi_kspace\n";
         if(!esinterface->getPsi_kspace(cG, spin, iorb_h5, ti))
           APP_ABORT("SplineAdoptorReader Failed to read band(s) from Interface!\n");
       }
     mpi::bcast(*myComm,cG);
         int iorb_h5   = bspline->BandIndexMap[iorb];
         int ti        = cur_bands[iorb_h5].TwistIndex;
-        std::cerr << "Compute norm at rank " << myComm->rank() << std::endl;
-        std::cerr << cG[0] << std::endl;
+        std::cout << "Computing norm at rank " << myComm->rank() << std::endl;
+        //std::cout << cG[0] << std::endl;
         double total_norm = compute_norm(cG);
-        std::cerr << "Norm\t" << total_norm << std::endl; 
+        std::cout << "Norm\t" << total_norm << std::endl; 
         if ((checkNorm) && (std::abs(total_norm - 1.0) > PW_COEFF_NORM_TOLERANCE))
         {
           std::cerr << "The orbital " << iorb_h5 << " has a wrong norm " << total_norm
@@ -427,10 +427,12 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
         }
 //    if (myComm->rank()==0)
       {
-        std::cerr << "fft_spline\n";
+        std::cout << "fft_spline...";
         fft_spline(cG, ti);
-        std::cerr << "set spline\n";
+        std::cout << "Done!\n";
+        std::cout << "set spline\n";
         bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
+        std::cout << "Done!\n";
       }  
       this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
     }

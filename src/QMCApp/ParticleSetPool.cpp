@@ -334,7 +334,7 @@ ParticleSet* ParticleSetPool::createInterfaceParticleSet(xmlNodePtr cur, Particl
     //create the electrons
     qp = new MCWalkerConfiguration;
     qp->setName(target);
-    qp->Lattice.copy(ions->Lattice);
+    //qp->Lattice.copy(ions->Lattice);
 
     app_log() << "  Simulation cell radius = " << qp->Lattice.SimulationCellRadius << std::endl;
     app_log() << "  Wigner-Seitz    radius = " << qp->Lattice.WignerSeitzRadius    << std::endl;

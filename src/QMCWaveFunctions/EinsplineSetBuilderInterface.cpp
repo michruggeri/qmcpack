@@ -364,7 +364,7 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
       app_error() << "Error reading orbital info from HDF5 file.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
-  std::cerr << "Do I get here?" << std::endl;
+  std::cout << "In set_metadata, ReadOrbitalInfo is true" << std::endl;
   app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
 //  myComm->barrier();
   orb_info_timer.restart();
@@ -377,8 +377,8 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
   PrimCell.set(Lattice);
   SuperCell.set(SuperLattice);
   GGt=dot(transpose(PrimCell.G), PrimCell.G);
-  for (int iat=0; iat<AtomicOrbitals.size(); iat++)
-  AtomicOrbitals[iat].Lattice = Lattice;
+//  for (int iat=0; iat<AtomicOrbitals.size(); iat++)
+//    AtomicOrbitals[iat].Lattice = Lattice;
 
 // Now, analyze the k-point mesh to figure out the what k-points  are needed
   TwistNum = TwistNum_inp;
@@ -774,20 +774,19 @@ bool
   ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
   myint = new ESPWSCFInterface(myComm);
   esinterface=static_cast<ESInterfaceBase*>(myint);
-   std::cerr << myComm->rank() << "e' il rank!\n";
 
-   std::cerr << "Initialize it... \n";
+   std::cout << "EinsplineSetBuilderInterface::ReadOrbitalInfo \n Initializing the interface...  ";
    esinterface->initialize();
-   std::cerr << "  Done!\n";
+   std::cout << "Done!\n";
 
 
    //OHMMS::Controller->barrier();
    //if(myComm->rank()==0){
-     std::cerr << "Getting primitive vectors...";
      esinterface->getVersion();
+     std::cout << "Getting lattice primitive vectors...  ";
      esinterface->getPrimVecs(Lattice);
      esinterface->getPrimVecs(SuperLattice);
-   //std::cerr << "  Done!\n";
+     std::cout << "Done!\n";
  
 //   OHMMS::Controller->barrier();
 //   std::cerr << "Barrier: seems to be working\n";
@@ -827,7 +826,8 @@ bool
    int have_dpsi = false;
    int NumAtomicOrbitals = 0;
    NumCoreStates = NumMuffinTins = NumTwists = NumSpins = NumBands = NumAtomicOrbitals = 0;
-std::cout << "Starting to extract information...   ";
+   std::cout << "Starting to extract information...   ";
+
    NumElectrons=TargetPtcl.getTotalNum();
 
 //   OHMMS::Controller->barrier();
@@ -841,7 +841,7 @@ std::cout << "Starting to extract information...   ";
    NumAtomicOrbitals = esinterface->getNumAtomicOrbitals();
    int num_species   = esinterface->getNumSpecies();
    int NumAtoms      = esinterface->getNumAtoms();
-std::cout << "Done!\n";
+   std::cout << "Done!\n";
    HaveOrbDerivs = have_dpsi;
    app_log() << "bands=" << NumBands << ", elecs=" << NumElectrons
              << ", spins=" << NumSpins << ", twists=" << NumTwists
@@ -870,10 +870,10 @@ std::cout << "Done!\n";
 //    HDFAttribIO<int> h_atomic_number (atomic_numbers[isp]);
 //    h_atomic_number.read(H5FileID, name.str().c_str());
 //  }
-  app_log()<<"Get Atomic Numbers"<<std::endl;
+  app_log()<<"Get Atomic Numbers...  ";
 
   esinterface->getAtomicNumbers(atomic_numbers);
-  app_log()<<"success?\n";
+  app_log()<<"Done!\n";
   for (int isp=0; isp<num_species; isp++)
     app_log()<<"speciesids: "<<species_ids[isp] << "\t"<< atomic_numbers[isp] <<std::endl;
   IonTypes.resize(species_ids.size());
@@ -882,19 +882,20 @@ std::cout << "Done!\n";
   //HDFAttribIO<Vector<TinyVector<double,3> > > h_IonPos(IonPos);
   //h_IonPos.read   (H5FileID, "/atoms/positions");
 
-   for (int i=0; i<IonTypes.size(); i++)
-     app_log() << "Atom type(" << i << ") = " << IonTypes[i] << std::endl;
-   app_log()<<"get Ion Positions"<<std::endl;
-   esinterface->getIonPositions(IonPos);
-   app_log() <<"got teh Positions! I think"<<std::endl;
-   for(int i=0;i<NumAtoms;i++)
-     app_log() << i << "\t" <<  IonPos[i][0] << "\t" << IonPos[i][1] << "\t" << IonPos[i][2] << "\n"; 
+//   for (int i=0; i<IonTypes.size(); i++)
+//     app_log() << "Atom type(" << i << ") = " << IonTypes[i] << std::endl;
+//   app_log()<<"get Ion Positions"<<std::endl;
+//   esinterface->getIonPositions(IonPos);
+//   app_log() <<"got teh Positions! I think"<<std::endl;
+//   for(int i=0;i<NumAtoms;i++)
+//     app_log() << i << "\t" <<  IonPos[i][0] << "\t" << IonPos[i][1] << "\t" << IonPos[i][2] << "\n"; 
 
    //esinterface->getAtomicOrbitals(AtomicOrbitals);
+
    std::vector<double> dummy(1);
-   std::cerr << "I'm trying to read the twists!\n";
+   std::cout << "Calling getTwistData...  ";
    esinterface->getTwistData(TwistAngles, dummy, TwistSymmetry);
-   std::cerr << "I did read the twists!\t" << TwistAngles[0] << std::endl;
+   std::cout << "Done!\t TwistAngles[0]:  " << TwistAngles[0] << std::endl;
 
   if(qmc_common.use_density)
   {
@@ -1004,7 +1005,7 @@ std::cout << "Done!\n";
     app_log() << "   Skip initialization of the density" << std::endl;
   }
 
-  std::cerr << "Success?" << std::endl; 
+  std::cout << "Returning from ReadOrbitalInfo" << std::endl; 
    // AAAAAAAAAAAAAAAAA
 //   esinterface->getReducedGVecs(Gvecs,0);
 //   exit(0);
