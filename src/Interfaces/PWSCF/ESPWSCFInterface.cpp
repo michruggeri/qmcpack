@@ -304,8 +304,7 @@ bool ESPWSCFInterface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin
 
   for(int i=0; i<ngtot; i++)  cG[i]=std::complex<double>(cgtmp[i][0], cgtmp[i][1]); //fftw_complex is a typedef of double x[2].  
   std::cout<<"The complex coefficient cG[0] is \t" << cG[0] << std::endl; 
-  //return false;   // MR: this allows to reproduce the crash reported by RC!!!
-  
+  return true;   
 }
 
 void getParticleSet(ParticleSet& P){
