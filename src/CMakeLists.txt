@@ -333,6 +333,7 @@ ENDIF()
     SUBDIRS(QMCDrivers/tests)
     SUBDIRS(QMCApp/tests)
     SUBDIRS(Message/tests)
+    SUBDIRS(CUDA/tests)
     SUBDIRS(OpenMP/tests)
     SUBDIRS(Optimize/tests)
   endif() #}
