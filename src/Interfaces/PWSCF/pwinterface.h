@@ -29,6 +29,7 @@ extern "C" void pwlib_getwfn_gvecs_(int * gvecs);
 extern "C" void pwlib_getwfn_band_(double * cg, int * ibnd, int * ik);
 extern "C" void pwlib_getwfn_eigenvals_(double * eig_, int * ik);
 extern "C" void pwlib_getmpifft_(int * nnr, int * mesh);
+extern "C" void pwlib_setatom_pos_(double *Rtmp);
 #endif
 
 
