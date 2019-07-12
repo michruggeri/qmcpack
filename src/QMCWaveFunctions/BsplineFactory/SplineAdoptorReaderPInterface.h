@@ -72,7 +72,8 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
   void export_MultiSpline(multi_UBspline_3d_z** target)
   {
     *target                                 = new multi_UBspline_3d_z;
-    multi_UBspline_3d_d* source_MultiSpline = (multi_UBspline_3d_d*)bspline->MultiSpline;
+    const auto* source_MultiSpline = (multi_UBspline_3d_d*)bspline->SplineInst->getSplinePtr();
+    //multi_UBspline_3d_d* source_MultiSpline = (multi_UBspline_3d_d*)bspline->MultiSpline;
 
     (*target)->spcode   = MULTI_U3D;
     (*target)->tcode    = DOUBLE_COMPLEX;
@@ -121,7 +122,8 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
     // (*target)->lapl3 = (complex_double*) malloc (6*sizeof(double)*(*target)->z_stride);
   }
 
-  void export_MultiSpline(multi_UBspline_3d_d** target) { *target = (multi_UBspline_3d_d*)bspline->MultiSpline; }
+  //void export_MultiSpline(multi_UBspline_3d_d** target) { *target = (multi_UBspline_3d_d*)bspline->MultiSpline; }
+  void export_MultiSpline(multi_UBspline_3d_d** target) { *target = (multi_UBspline_3d_d*)bspline->SplineInst->getSplinePtr(); }
 
   SPOSet* create_spline_set(int spin, const BandInfoGroup& bandgroup)
   {
@@ -152,6 +154,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       APP_ABORT("EinsplineAdoptorReader needs psi_g. Set precision=\"double\".");
     }
     bspline->create_spline(xyz_grid, xyz_bc);
+    std::cout << "Spline: created\n";
     //    int TwistNum = mybuilder->TwistNum;
     std::ostringstream oo;
     oo << bandgroup.myName << ".g" << MeshSize[0] << "x" << MeshSize[1] << "x" << MeshSize[2] << ".h5";
@@ -187,6 +190,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       h5f.close();
     }
     myComm->bcast(foundspline);
+    std::cout << "Foundspline: broadcast  " << foundspline << "\n";
     if (foundspline)
     {
       now.restart();
@@ -201,22 +205,28 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       int nx = MeshSize[0];
       int ny = MeshSize[1];
       int nz = MeshSize[2];
+      std::cout << "havePsig  " << havePsig << "\n";
       if (havePsig) //perform FFT using FFTW
       {
+        std::cout << "resize box\n";
         FFTbox.resize(nx, ny, nz);
+        std::cout << "fft \n";
         FFTplan = fftw_plan_dft_3d(nx, ny, nz, reinterpret_cast<fftw_complex*>(FFTbox.data()),
                                    reinterpret_cast<fftw_complex*>(FFTbox.data()), +1, FFTW_ESTIMATE);
+        std::cout << "resizing spline\n";
         splineData_r.resize(nx, ny, nz);
         if (bspline->is_complex)
           splineData_i.resize(nx, ny, nz);
 
         TinyVector<double, 3> start(0.0);
         TinyVector<double, 3> end(1.0);
+        std::cout << "creating spline\n";
         spline_r = einspline::create(spline_r, start, end, MeshSize, bspline->HalfG);
         if (bspline->is_complex)
           spline_i = einspline::create(spline_i, start, end, MeshSize, bspline->HalfG);
 
         now.restart();
+        std::cout << "before initialize_spline_slow\n";
         initialize_spline_slow(spin, bandgroup);
         //initialize_spline_pio_gather(spin, bandgroup);
         app_log() << "  SplineAdoptorReader initialize_spline_pio " << now.elapsed() << " sec" << std::endl;
@@ -242,6 +252,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
     }
 
     clear();
+    std::cout << "bspline is ready\n";
     return bspline;
   }
 
@@ -271,7 +282,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
       fix_phase_rotate_c2r(FFTbox, splineData_r, mybuilder->TwistAngles[ti], rotate_phase_r, rotate_phase_i);
       einspline::set(spline_r, splineData_r.data());
     }
-    std::cout << "fft_spline: done. \n";
+    std::cout << "fft_spline: done. " << cG[0] << "\t" << ti << std::endl;
   }
 
 
@@ -381,16 +392,23 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
 //    const std::vector<BandInfo>& cur_bands=bandgroup.myBands;
 
     int Nbands            = bandgroup.getNumDistinctOrbitals();
+    std::cout << "NBands  " << Nbands << std::endl;
     const int Nprocs      = myComm->size();
+    std::cout << "NProcs  " << Nprocs << std::endl;
     const int Nbandgroups = std::min(Nbands, Nprocs);
-    Communicate band_group_comm(*myComm, Nbandgroups);
+    std::cout << "NBG  " << Nbandgroups << std::endl;
+//    Communicate band_group_comm(*myComm, Nbandgroups);
+//    std::cout << "band_group_comm ready  " << std::endl;
     std::vector<int> band_groups(Nbandgroups + 1, 0);
+    std::cout << "before fair divide low\n";
     FairDivideLow(Nbands, Nbandgroups, band_groups);
-    int iorb_first = band_groups[band_group_comm.getGroupID()];
-    int iorb_last  = band_groups[band_group_comm.getGroupID() + 1];
+//    int iorb_first = band_groups[band_group_comm.getGroupID()];
+//    int iorb_last  = band_groups[band_group_comm.getGroupID() + 1];
     app_log() << "Start transforming plane waves to 3D B-Splines." << std::endl;
 //    hdf_archive h5f(&band_group_comm, false);
     Vector<std::complex<double>> cG(mybuilder->Gvecs[0].size());
+    for(int i=0;i<mybuilder->Gvecs[0].size();i++)
+      cG[i] = (0.0,0.0);
     const std::vector<BandInfo>& cur_bands = bandgroup.myBands;
     ESInterfaceBase* esinterface(0);
     esinterface=mybuilder->get_interface();
@@ -434,7 +452,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
         bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
         std::cout << "Done!\n";
       }  
-      this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
+      //this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
     }
   }
 //    myComm->barrier();

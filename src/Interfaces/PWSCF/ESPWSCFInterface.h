@@ -99,7 +99,7 @@ namespace qmcplusplus
     void setAtomicNumbers(Vector<int> & am){}; 
 
     void getIonPositions(ParticlePos_t & ionpos);
-    void setIonPositions(const ParticlePos_t & ionpos){};
+    void setIonPositions(const ParticlePos_t & ionpos);
 
     //void printVersion();  
     void getTwistData(std::vector<PosType>& TwistAngles,

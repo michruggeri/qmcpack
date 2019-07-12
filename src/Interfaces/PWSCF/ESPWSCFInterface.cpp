@@ -22,10 +22,14 @@ void ESPWSCFInterface::initialize()
   if (initialized==false)
   {
     //int commID = myComm->getMPI();
-    int commID = myComm->rank();
+    int commID = myComm->rank()+1;
     app_log()<<" ESPWSCFInterface::initialize() commID = "<<commID<<std::endl;
     app_log()<<" MPI_WORLD_COMM = "<<MPI_COMM_WORLD<<std::endl;
     pwlib_init_(&commID);
+    app_log()<<" pwlib is initialized "<<std::endl;
+//  pwlib_setatompos();
+//    ParticlePos_t aaa;
+//    setIonPositions(aaa);
     pwlib_scf_();
     initialized=true;
   }
@@ -58,14 +62,17 @@ int ESPWSCFInterface::getNumBands()
 {
   
 //  std::cout<<"QMCPACKRANK="<<OHMMS::Controller->rank()<<std::endl; 
-  OHMMS::Controller->barrier();
+//  OHMMS::Controller->barrier();
   if (nbands<0) pwlib_getwfn_info_(&nbands, &nktot, &nkloc, mesh, &ngtot, &npw, &npwx );
   return nbands;
 }
 int ESPWSCFInterface::getNumSpins()
 {
+  int ns=0;
   pwlib_getelectron_info_(&nelec, &nup, &ndown);
-  return 1;
+  if(nup>0)   ns++;
+  if(ndown>0) ns++;
+  return ns;
 }
 int ESPWSCFInterface::getNumTwists()
 {
@@ -139,7 +146,7 @@ void ESPWSCFInterface::getSpeciesData(Vector<int> & am, Vector<int> & q, Vector<
   pwlib_getspecies_data_(&am[0], &q[0], &mass[0], pwnames[0] );
 
   speciesNames=convertCharToString(pwnames,nsp);
-
+  return;
 }
 
 void ESPWSCFInterface::getAtomicNumbers(Vector<int> & am)
@@ -188,22 +195,22 @@ void ESPWSCFInterface::getIonPositions(ParticlePos_t & R)
   return;
 }
 //Quantum Espresso uses Bohr internal units.  
+void ESPWSCFInterface::setIonPositions(const ParticlePos_t & ionpos)
 //void ESPWSCFInterface::setIonPositions(Vector<TinyVector<double,OHMMS_DIM> > & R)
-//{
-//  int nat=R.size();
-//  int Rtmp[nat][OHMMS_DIM];
+{
+  int nat=ionpos.size();
+  double Rtmp[nat][OHMMS_DIM];
 
-//  for (int i=0; i<nat; i++)
-//  {
-//    for (int j=0; j<OHMMS_DIM; j++)
-//    {
-//       Rtmp[i][j]=R[i][j];
-//    }
-//  } 
-//
-//  pwlib_setatom_pos_(Rtmp[0]);
-//
-//}
+  for (int i=0; i<nat; i++)
+  {
+    for (int j=0; j<OHMMS_DIM; j++)
+    {
+       Rtmp[i][j]=ionpos[i][j];
+    }
+  } 
+  pwlib_setatom_pos_(Rtmp[0]);
+  return;
+}
 
 void ESPWSCFInterface::getAtomicOrbitals(std::vector<AtomicOrbital<std::complex<double> > > & AtomicOrbitals)
 {
@@ -257,7 +264,7 @@ void ESPWSCFInterface::getMeshSize(TinyVector<int,3> & mesh_out)
   mesh_out[0]=mesh[0];
   mesh_out[1]=mesh[1];
   mesh_out[2]=mesh[2];
-  
+  return;  
 }
      
 void ESPWSCFInterface::getReducedGVecs(std::vector<std::vector<TinyVector<int,3> > > & gvecs, int index)
@@ -281,6 +288,7 @@ void ESPWSCFInterface::getReducedGVecs(std::vector<std::vector<TinyVector<int,3>
     std::cerr << std::endl;
   }
   */
+  return;
 }
 
 //bool ESPWSCFInterface::getPsi_kspace(Vector<complex<double> > & Cg, int orbid, int twistid)
