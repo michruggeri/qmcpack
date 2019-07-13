@@ -35,12 +35,14 @@ cd ${rootdirname}
 patch -p1 -i ../QMCQEPack_qepatch.diff
 cd ..
 if [ -e $rootdirname/PW/src/pwinterfacemod.f90 ]; then
+echo ---
 echo --- SUCCESS: int${codename} patched for pwscf C++ interface
 echo "--- Configure using ./configure --with-hdf5 HDF5_DIR=(HDF5 base directory)"
 echo --- Add platform specific options as needed.
-echo --- FFTW3 library should be compiled as position-independent-code (PIC) 
+echo "--- FFTW3 library should be compiled as position-independent-code (PIC)" 
 echo --- if you want to use it.  Otherwise, use the internal FFTW library, which 
 echo --- one can do by swapping -D__FFTW3 for -D__FFTW in make.sys
+echo ---
 else
 echo --- ERROR: Could not find PW/src/pwinterfacemod.f90 after patching
 echo --- Probably the patch is missing or the archive has been updated.
