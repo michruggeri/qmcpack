@@ -101,8 +101,6 @@ EinsplineSetBuilderInterface::~EinsplineSetBuilderInterface()
 
 void EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
 {
-  std::cout << "In BroadcastOrbitalInfo; size: " << myComm->size() << std::endl;
-  std::cout << "                         rank: " << myComm->rank() << std::endl;
   if(myComm->size() == 1)
     return;
   int numIons = IonTypes.size();
@@ -110,42 +108,23 @@ void EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
   int numDensityGvecs = TargetPtcl.DensityReducedGvecs.size();
   PooledData<double> abuffer;
   PooledData<int>       aibuffer;
-  std::cout << "Before adding things to the buffer...\n";
-  std::cout << "Version...\n";
   aibuffer.add(Version.begin(),Version.end()); //myComm->bcast(Version);
-  std::cout << "Format...\n";
   aibuffer.add(Format);
-  std::cout << "Lattice...\n";
   abuffer.add(Lattice.begin(),Lattice.end());//myComm->bcast(Lattice);
-  std::cout << "RecipLattice...\n";
   abuffer.add(RecipLattice.begin(),RecipLattice.end()); //myComm->bcast(RecipLattice);
-  std::cout << "SuperLattice...\n";
   abuffer.add(SuperLattice.begin(),SuperLattice.end()); //myComm->bcast(SuperLattice);
-  std::cout << "LatticeInv...\n";
   abuffer.add(LatticeInv.begin(),LatticeInv.end()); //myComm->bcast(LatticeInv);
-  std::cout << "Electrons:\n";
-  std::cout << "  Bands...\n";
   aibuffer.add(NumBands); //myComm->bcast(NumBands);
-  std::cout << "  Number...\n";
   aibuffer.add(NumElectrons); //myComm->bcast(NumElectrons);
-  std::cout << "  Spins...\n";
   aibuffer.add(NumSpins); //myComm->bcast(NumSpins);
-  std::cout << "  Twists...\n";
   aibuffer.add(NumTwists); //myComm->bcast(NumTwists);
-  std::cout << "  Ions...\n";
   aibuffer.add(numIons); //myComm->bcast(numIons);
-  std::cout << "  MuffinTins...\n";
   aibuffer.add(NumMuffinTins);
-  std::cout << "  Orbitals...\n";
   aibuffer.add(numAtomicOrbitals);
-  std::cout << "  Gvecs...\n";
   aibuffer.add(numDensityGvecs);
-  std::cout << "  HaveDerivs...\n";
   aibuffer.add(HaveOrbDerivs); 
-  std::cout << "Before broadcasting the buffers...\n";
   myComm->bcast(abuffer);
   myComm->bcast(aibuffer);
-  std::cout << "Done!\n" << std::endl;
   if(myComm->rank())
   {
     abuffer.rewind();
@@ -187,28 +166,20 @@ void EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
     IonPos.resize(numIons);
   }
   //new buffer
-  std::cout << "Started dealing with the second buffer...\n";
   PooledData<double> bbuffer;
   PooledData<int> bibuffer;
-  std::cout << "   IonTypes...\n";
   for(int i=0; i<numIons; ++i)
     bibuffer.add(IonTypes[i]);
   //myComm->bcast(IonTypes);
-  std::cout << "   IonPos..." << numIons << "\t" << OHMMS_DIM << "\n";
-  for(int i=0; i<numIons; ++i)
-     std::cout << IonPos[i][0] << "  " << IonPos[i][1] << "  " << IonPos[i][2] << "\n";
   bbuffer.add(&IonPos[0][0],&IonPos[0][0]+OHMMS_DIM*numIons);
   //myComm->bcast(IonPos);
-  std::cout << "   Twist angles...\n";
   if (TwistAngles.size() != NumTwists)
     TwistAngles.resize(NumTwists);
   bbuffer.add(&TwistAngles[0][0],&TwistAngles[0][0]+OHMMS_DIM*NumTwists);
   //myComm->bcast(TwistAngles);
-  std::cout << "   Twist symmetry...\n";
   if (TwistSymmetry.size() != NumTwists)
     TwistSymmetry.resize(NumTwists);
   bibuffer.add(&TwistSymmetry[0],&TwistSymmetry[0]+NumTwists);
-  std::cout << "   Twist weights...\n";
   if (TwistWeight.size() != NumTwists)
     TwistWeight.resize(NumTwists);
   bibuffer.add(&TwistWeight[0],&TwistWeight[0]+NumTwists);
@@ -217,14 +188,12 @@ void EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
   bibuffer.add(MT_APW_num_radial_points.begin(),
        MT_APW_num_radial_points.end());
   bbuffer.add(&(MT_centers[0][0]), &(MT_centers[0][0])+OHMMS_DIM*NumMuffinTins);
-  std::cout << "   Muffin tins...\n";
   for (int i=0; i<NumMuffinTins; i++)
     bbuffer.add(MT_APW_rgrids[i].begin(), MT_APW_rgrids[i].end());
   bibuffer.add(&(TargetPtcl.DensityReducedGvecs[0][0]),
        &(TargetPtcl.DensityReducedGvecs[0][0])+numDensityGvecs*OHMMS_DIM);
   bbuffer.add(&(TargetPtcl.Density_G[0]),
       &(TargetPtcl.Density_G[0]) + numDensityGvecs);
-  std::cout << "   Orbitals...\n";
   for (int iat=0; iat<numAtomicOrbitals; iat++)
   {
     AtomicOrbital<std::complex<double> > &orb = AtomicOrbitals[iat];
@@ -237,11 +206,8 @@ void EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
     bbuffer.add  (orb.SplineRadius);
     bbuffer.add  (orb.PolyRadius);
   }
-  std::cout << "The second buffer is ready.\n";
-  std::cout << "Broadcasting the second buffer... \n";
   myComm->bcast(bbuffer);
   myComm->bcast(bibuffer);
-  std::cout << "Done!\n";
   if(myComm->rank())
   {
     bbuffer.rewind();
@@ -310,7 +276,6 @@ void EinsplineSetBuilderInterface::BroadcastOrbitalInfo()
     for (int i=0; i<numIons; i++)
       AtomicCentersInfo.ion_pos[i]=IonPos[i];
   }
-  std::cout << "Broadcast done!\n";
   return;
 }
 
@@ -402,7 +367,6 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
       app_error() << "Error reading orbital info from Espresso interface.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
-  std::cout << "In set_metadata, ReadOrbitalInfo is true" << std::endl;
 //  app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
 //  myComm->barrier();
 //  orb_info_timer.restart();
@@ -423,7 +387,6 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 // Now, analyze the k-point mesh to figure out the what k-points  are needed
   TwistNum = TwistNum_inp;
   AnalyzeTwists2();
-  std::cout << "Exiting set_metadata\n";
   }/////////////////////////////////////////
 }
 
@@ -610,21 +573,20 @@ SPOSet* EinsplineSetBuilderInterface::createSPOSetFromXML(xmlNodePtr cur)
 //////////////////////////////////
 // Create the OrbitalSet object
 //////////////////////////////////
-  app_log() << "So far so good\n";
+//  app_log() << "So far so good\n";
   Timer mytimer;
   mytimer.restart();
   OccupyBands(spinSet, sortBands, numOrbs);
-//OccupyBands(spinSet, sortBands, numOrbs);
-  app_log() << "So far so good\n";
+//  app_log() << "So far so good\n";
   if(spinSet==0) TileIons();
-  app_log() << "So far so good\n";
+//  app_log() << "So far so good\n";
 
   bool use_single= (spo_prec == "single" || spo_prec == "float");
 
 // safeguard for a removed feature
   if(truncate=="yes") APP_ABORT("The 'truncate' feature of spline SPO has been removed. Please use hybrid orbital representation.");
 
-  app_log() << "So far so good\n";
+//  app_log() << "So far so good\n";
 #if !defined(QMC_COMPLEX)
   if (UseRealOrbitals)
   {
@@ -813,38 +775,28 @@ bool
    //Tensor<double,OHMMS_DIM> Lattice, RecipLattice, LatticeInv, GGt;
    //Tensor<int,OHMMS_DIM> TileMatrix;
    //std::cerr << "Declare the pointer to ESHDF5interface...";
+  if(myComm->size() > 1)
+    APP_ABORT(" EinsplineSetBuilderInterface::ReadOrbitalInfo(); The QMCQEPack interface at the moment works only for serial runs!\n");
+  OHMMS::Controller->barrier();
   ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
   myint = new ESPWSCFInterface(myComm);
   esinterface=static_cast<ESInterfaceBase*>(myint);
 
-   std::cout << "EinsplineSetBuilderInterface::ReadOrbitalInfo \n Initializing the interface...  ";
-   std::cout << "Rank: " << myComm->rank() << "\n";
    esinterface->initialize();
-   std::cout << "Done!\n";
-   std::cout << "Rank: " << myComm->rank() << "\n";
 
 
-   //OHMMS::Controller->barrier();
      esinterface->getVersion();
-     std::cout << "Getting lattice primitive vectors...  ";
      esinterface->getPrimVecs(Lattice);
      esinterface->getPrimVecs(SuperLattice);
-     std::cout << "Done!\n";
  
 //   OHMMS::Controller->barrier();
 //   std::cerr << "Barrier: seems to be working\n";
 
-   std::cout << "Tile matrix...  "; 
    for(int i=0;i<3;i++)
      for(int j=0;j<3;j++)
        TileMatrix(i,j) = (i==j) ? 1 : 0;
-   std::cout << "Done!\n";
-   std::cout << "RecipLattice...  ";
    RecipLattice = 2.0*M_PI*inverse(Lattice);
-   std::cout << "Done!\n";
-   std::cout << "SuperLattice...  ";
    SuperLattice = dot(TileMatrix, Lattice);
-   std::cout << "Done!\n";
    char buff[1000];
    snprintf (buff, 1000,
              "  Lattice = \n    [ %9.6f %9.6f %9.6f\n"
@@ -864,46 +816,27 @@ bool
              SuperLattice(2,0), SuperLattice(2,1), SuperLattice(2,2));
 //   OHMMS::Controller->barrier();
 //   if(myComm->rank()==0)
-   std::cout << "Checking the lattice...  ";
      CheckLattice();
-   std::cout << "Done!\n";
 //   OHMMS::Controller->barrier();
    app_log() << buff;
-   std::cout << "LatticeInv...  ";
    for (int i=0; i<3; i++)
      for (int j=0; j<3; j++)
        LatticeInv(i,j) = RecipLattice(i,j)/(2.0*M_PI);
-   std::cout << "Done!\n";
    int have_dpsi = false;
    int NumAtomicOrbitals = 0;
-   std::cout << "Setting things to 0...  ";
    NumCoreStates = NumMuffinTins = NumTwists = NumSpins = NumBands = NumAtomicOrbitals = 0;
-   std::cout << "Done!\n";
-   std::cout << "Getting electron number...";
    NumElectrons=TargetPtcl.getTotalNum();
-   std::cout << "Done!\n";
 //   OHMMS::Controller->barrier();
 
-   std::cout << "Getting intormation from interface...  ";
    NumBands          = esinterface->getNumBands();
-   std::cout << "bands  ";
    NumSpins          = esinterface->getNumSpins();
-   std::cout << "spins  ";
    NumTwists         = esinterface->getNumTwists();
-   std::cout << "n twist  ";
    NumCoreStates     = esinterface->getNumCoreStates();
-   std::cout << "n core states  ";
    NumMuffinTins     = esinterface->getNumMuffinTins();
-   std::cout << "n muffin tins  ";
    have_dpsi         = esinterface->getHaveDPsi();
-   std::cout << "have dpsi  ";
    NumAtomicOrbitals = esinterface->getNumAtomicOrbitals();
-   std::cout << "n orbitals  ";
    int num_species   = esinterface->getNumSpecies();
-   std::cout << "n species  ";
    int NumAtoms      = esinterface->getNumAtoms();
-   std::cout << "n atoms  ";
-   std::cout << "Done!\n";
    HaveOrbDerivs = have_dpsi;
    app_log() << "bands=" << NumBands << ", elecs=" << NumElectrons
              << ", spins=" << NumSpins << ", twists=" << NumTwists
@@ -955,9 +888,7 @@ bool
    //esinterface->getAtomicOrbitals(AtomicOrbitals);
 
    std::vector<double> dummy(1);
-   std::cout << "Calling getTwistData...  ";
    esinterface->getTwistData(TwistAngles, dummy, TwistSymmetry);
-   std::cout << "Done!\t TwistAngles[0]:  " << TwistAngles[0] << std::endl;
 
   if(qmc_common.use_density)
   {
@@ -1067,7 +998,6 @@ bool
     app_log() << "   Skip initialization of the density" << std::endl;
   }
 
-  std::cout << "Returning from ReadOrbitalInfo" << std::endl; 
    // AAAAAAAAAAAAAAAAA
 //   esinterface->getReducedGVecs(Gvecs,0);
 //   exit(0);
@@ -1092,20 +1022,8 @@ void EinsplineSetBuilderInterface::OccupyBands(int spin, int sortBands, int numO
     app_log()<<"DistinctTwist[ti]="<<ti<<" "<<DistinctTwists[ti]<<std::endl;
 
     int tindex = DistinctTwists[ti];
-//     First, read valence states
-//    std::ostringstream ePath;
-//    ePath << "/electrons/kpoint_" << tindex << "/spin_"
-//          << spin << "/eigenvalues";
     std::vector<double> eigvals;
-//  H5FileID = H5Fopen(H5FileName.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
-//    std::cerr << H5FileName << std::endl;
-//    std::cerr << ePath.str() << std::endl;
-//    HDFAttribIO<std::vector<double> > h_eigvals(eigvals);
-//    h_eigvals.read(H5FileID, ePath.str().c_str());
-//    ESHDF5Interface esinterface; /// ???
-    app_log()<<"WEEEEEEEEE"<<std::endl;
-    esinterface->getOrbEigenvals(spin,ti,eigvals);  // HDF5 is complaining here
-    app_log()<<"WEEEEEEEEE"<<std::endl;
+    esinterface->getOrbEigenvals(spin,ti,eigvals);
     for (int bi=0; bi<NumBands; bi++)
     {
       BandInfo band;
@@ -1113,9 +1031,7 @@ void EinsplineSetBuilderInterface::OccupyBands(int spin, int sortBands, int numO
       band.TwistIndex = tindex;
       band.BandIndex  = bi;
       band.MakeTwoCopies = MakeTwoCopies[ti];
-    app_log()<<"WEEE"<<bi << std::endl;
-      band.Energy = eigvals[bi];  // It's you!!
-    app_log()<<"WEEE"<<bi << std::endl;
+      band.Energy = eigvals[bi]; 
       if (band.Energy > -1.0e100)
         SortBands.push_back(band);
       if (MakeTwoCopies[ti])
@@ -1123,24 +1039,6 @@ void EinsplineSetBuilderInterface::OccupyBands(int spin, int sortBands, int numO
       else
         maxOrbs++;
     }
-    // Now, read core states
-/*    for (int cs=0; cs<NumCoreStates; cs++)
-    {
-      APP_ABORT("Core states not supported with interface yet")
-      BandInfo band;
-      band.IsCoreState = true;
-      band.TwistIndex = tindex;
-      band.BandIndex  = cs;
-      band.MakeTwoCopies = MakeTwoCopies[ti];
-      HDFAttribIO<double> h_energy(band.Energy);
-      h_energy.read   (H5FileID, (CoreStatePath(ti,cs)+"eigenvalue").c_str());
-      if (band.Energy > -1.0e100)
-        SortBands.push_back(band);
-      if (MakeTwoCopies[ti])
-        maxOrbs+=2;
-      else
-        maxOrbs++;
-    }*/
   }
    // Now sort the bands by energy
   if (sortBands==2)

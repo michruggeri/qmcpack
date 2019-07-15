@@ -475,7 +475,7 @@ bool QMCMain::validateXML()
   //initialize the interface if it exists
 
   OhmmsXPathObject intfc("//interface",m_context);
-  if(intfc.empty())
+/*  if(intfc.empty())
   {
     app_log() << "!!!!!No interface found.  Hopefully nothing bad happens...\n";
     //interface not found.  ignore.  
@@ -496,7 +496,7 @@ bool QMCMain::validateXML()
     //if (intfcbuilder->getPtclInterface() != 0){
     //   ptclPool->createInterfaceParticleSet(intfcbuilder->getPtclNode(),0);
     //}
-  }
+  }*/
 ////////////////////////////////////////////
 
   //preserve the input order
