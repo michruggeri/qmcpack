@@ -66,14 +66,18 @@ int ESPWSCFInterface::getNumBands()
   if (nbands<0) pwlib_getwfn_info_(&nbands, &nktot, &nkloc, mesh, &ngtot, &npw, &npwx );
   return nbands;
 }
+
 int ESPWSCFInterface::getNumSpins()
 {
   int ns=0;
   pwlib_getelectron_info_(&nelec, &nup, &ndown);
-  if(nup>0)   ns++;
-  if(ndown>0) ns++;
-  return ns;
+  
+  if(nup!=ndown and nup>0 and ndown>0)
+    return 2;
+  else
+    return 1; 
 }
+
 int ESPWSCFInterface::getNumTwists()
 {
   if (nktot<0) pwlib_getwfn_info_(&nbands, &nktot, &nkloc, mesh, &ngtot, &npw, &npwx );
@@ -224,9 +228,13 @@ void ESPWSCFInterface::getOrbEigenvals(const int spin, const int kid, std::vecto
   if (nbands<0) pwlib_getwfn_info_(&nbands, &nktot, &nkloc, mesh, &ngtot, &npw, &npwx );
 
   eigenvals.resize(nbands);
-
+  if(getNumSpins()==2)
+    pwkid+=nktot*(spin);
   pwlib_getwfn_eigenvals_(&eigenvals[0], &pwkid); //&eigenvals[0] is the address of the first element in the vector array.
 	                                       //spin not used.  Should be put in k-id index calculation.     
+//    std::cout << "Energies:" << std::endl;
+//  for (int i=0;i<8;i++)
+//    std::cout << i << "  " << eigenvals[i] << std::endl;
   return;
 }
 
@@ -303,6 +311,10 @@ bool ESPWSCFInterface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin
   std::cout<<"ngtot="<<ngtot<<std::endl;
   int pwtwistid=twistid+1;
   int pworbid=orbid+1;
+/////
+  if(getNumSpins()==2)
+    pwtwistid+=nktot*(spin);
+/////
   if (ngtot<0) pwlib_getwfn_info_(&nbands, &nktot, &nkloc, mesh, &ngtot, &npw, &npwx );
   
   fftw_complex cgtmp[ngtot];
