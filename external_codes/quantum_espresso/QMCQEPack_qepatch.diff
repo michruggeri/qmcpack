@@ -1,6 +1,6 @@
 diff -urN q-e-qe-5.3/install/configure q-e-qe-5.3-patched/install/configure
 --- q-e-qe-5.3/install/configure	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/install/configure	2019-05-07 17:02:08.433764892 +0200
++++ q-e-qe-5.3-patched/install/configure	2019-07-13 17:46:31.569200759 +0200
 @@ -682,6 +682,7 @@
  GREP
  CPP
@@ -36,7 +36,7 @@ diff -urN q-e-qe-5.3/install/configure q-e-qe-5.3-patched/install/configure
  
 diff -urN q-e-qe-5.3/install/make.sys.in q-e-qe-5.3-patched/install/make.sys.in
 --- q-e-qe-5.3/install/make.sys.in	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/install/make.sys.in	2019-05-07 17:02:08.433764892 +0200
++++ q-e-qe-5.3-patched/install/make.sys.in	2019-07-13 17:46:31.569200759 +0200
 @@ -77,9 +77,14 @@
  # C flags must include DFLAGS and IFLAGS
  # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
@@ -76,7 +76,7 @@ diff -urN q-e-qe-5.3/install/make.sys.in q-e-qe-5.3-patched/install/make.sys.in
  WGET = @wget@
 diff -urN q-e-qe-5.3/Modules/mp_bands.f90 q-e-qe-5.3-patched/Modules/mp_bands.f90
 --- q-e-qe-5.3/Modules/mp_bands.f90	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/Modules/mp_bands.f90	2019-06-13 17:02:04.234141984 +0200
++++ q-e-qe-5.3-patched/Modules/mp_bands.f90	2019-07-13 17:46:31.569200759 +0200
 @@ -78,7 +78,7 @@
      !
      ! ... set index of processor within the image ( 0 : nproc_image - 1 )
@@ -88,7 +88,7 @@ diff -urN q-e-qe-5.3/Modules/mp_bands.f90 q-e-qe-5.3-patched/Modules/mp_bands.f9
      !
 diff -urN q-e-qe-5.3/Modules/mp_base.f90 q-e-qe-5.3-patched/Modules/mp_base.f90
 --- q-e-qe-5.3/Modules/mp_base.f90	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/Modules/mp_base.f90	2019-06-13 16:40:45.949236551 +0200
++++ q-e-qe-5.3-patched/Modules/mp_base.f90	2019-07-13 17:46:31.569200759 +0200
 @@ -34,8 +34,9 @@
     INTEGER, INTENT(IN) :: gid
  #if defined __MPI && defined __USE_BARRIER
@@ -109,9 +109,31 @@ diff -urN q-e-qe-5.3/Modules/mp_base.f90 q-e-qe-5.3-patched/Modules/mp_base.f90
  #if defined __USE_BARRIER
          CALL mp_synchronize( gid )
  #endif
+diff -urN q-e-qe-5.3/Modules/version.f90.tmp q-e-qe-5.3-patched/Modules/version.f90.tmp
+--- q-e-qe-5.3/Modules/version.f90.tmp	1970-01-01 01:00:00.000000000 +0100
++++ q-e-qe-5.3-patched/Modules/version.f90.tmp	2019-07-17 11:12:22.848926846 +0200
+@@ -0,0 +1,18 @@
++!
++! Copyright (C) 2003-2015 Quantum ESPRESSO group
++! This file is distributed under the terms of the
++! GNU General Public License. See the file `License'
++! in the root directory of the present distribution,
++! or http://www.gnu.org/copyleft/gpl.txt .
++!
++!----------------------------------------------------------------------------
++MODULE global_version
++  !
++  IMPLICIT NONE
++  !
++  SAVE
++  !
++  CHARACTER (LEN=6) :: version_number = '5.3.0'
++  CHARACTER (LEN=12) :: svn_revision = 'unknown'
++  !
++END MODULE global_version
 diff -urN q-e-qe-5.3/PW/src/input.f90 q-e-qe-5.3-patched/PW/src/input.f90
 --- q-e-qe-5.3/PW/src/input.f90	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/input.f90	2019-07-11 14:48:36.017902770 +0200
++++ q-e-qe-5.3-patched/PW/src/input.f90	2019-07-13 17:46:31.569200759 +0200
 @@ -1333,7 +1333,8 @@
    !
  
@@ -122,11 +144,10 @@ diff -urN q-e-qe-5.3/PW/src/input.f90 q-e-qe-5.3-patched/PW/src/input.f90
    ALLOCATE( force(  3, nat_ ) )
    ALLOCATE( if_pos( 3, nat_ ) )
    ALLOCATE( extfor( 3, nat_ ) )
-Binary files q-e-qe-5.3/PW/src/intf and q-e-qe-5.3-patched/PW/src/intf differ
 Binary files q-e-qe-5.3/PW/src/libpwinterface.so and q-e-qe-5.3-patched/PW/src/libpwinterface.so differ
 diff -urN q-e-qe-5.3/PW/src/Makefile q-e-qe-5.3-patched/PW/src/Makefile
 --- q-e-qe-5.3/PW/src/Makefile	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/Makefile	2019-07-11 14:20:20.967343727 +0200
++++ q-e-qe-5.3-patched/PW/src/Makefile	2019-07-13 17:46:31.569200759 +0200
 @@ -166,6 +166,7 @@
  pw2blip.o \
  pw2casino.o \
@@ -179,8 +200,8 @@ diff -urN q-e-qe-5.3/PW/src/Makefile q-e-qe-5.3-patched/PW/src/Makefile
  	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 diff -urN q-e-qe-5.3/PW/src/pwinterfacemod.f90 q-e-qe-5.3-patched/PW/src/pwinterfacemod.f90
 --- q-e-qe-5.3/PW/src/pwinterfacemod.f90	1970-01-01 01:00:00.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/pwinterfacemod.f90	2019-07-11 14:42:30.387398902 +0200
-@@ -0,0 +1,274 @@
++++ q-e-qe-5.3-patched/PW/src/pwinterfacemod.f90	2019-07-17 11:00:59.499709463 +0200
+@@ -0,0 +1,284 @@
 +!
 +! Copyright (C) 2001-2013 Quantum ESPRESSO group
 +! This file is distributed under the terms of the
@@ -240,6 +261,7 @@ diff -urN q-e-qe-5.3/PW/src/pwinterfacemod.f90 q-e-qe-5.3-patched/PW/src/pwinter
 +      USE fft_base,         ONLY : dffts
 +      USE mp_world,         ONLY : world_comm
 +      USE mp,               ONLY : mp_sum, mp_rank, mp_barrier
++      USE lsda_mod, ONLY: lsda
 +      USE io_global, ONLY: stdout
 +     INTEGER, INTENT(OUT) :: nbands_, nktot_, nkloc_, ngtot_, npw_, npwx_
 +     INTEGER, INTENT(OUT) :: mesh_(3)
@@ -247,9 +269,13 @@ diff -urN q-e-qe-5.3/PW/src/pwinterfacemod.f90 q-e-qe-5.3-patched/PW/src/pwinter
 +     nbands_=nbnd
 +     nktot_=nkstot
 +     nkloc_=nks
++     if(lsda)then
++       nktot_= nktot_/2
++       nkloc_= nkloc_/2
++     endif
 +!     WRITE(stdout,*) 'rank = ',mp_rank(world_comm)
 +!     WRITE(stdout,*) 'nbands = ',nbands_
-+!     WRITE(stdout,*) 'nktot = ',nktot_
++     WRITE(stdout,*) 'nktot = ',nktot_
 +!     WRITE(stdout,*) 'nkloc = ',nkloc_
 +!     WRITE(stdout,*) 'gvec_set = ',gvec_set
 +!     WRITE(stdout,*) 'mpi_comm_world = ',world_comm
@@ -275,6 +301,11 @@ diff -urN q-e-qe-5.3/PW/src/pwinterfacemod.f90 q-e-qe-5.3-patched/PW/src/pwinter
 +     ngtot_=ngtot_g  
 +     npw_=npw_g
 +     npwx_=npwx_g
++     WRITE(stdout,*) '----------------'
++     WRITE(stdout,*) 'ngtot = ',ngtot
++     WRITE(stdout,*) 'npw   = ',npw_
++     WRITE(stdout,*) 'npwx  = ',npwx_
++     WRITE(stdout,*) '----------------'
 +
 +  END SUBROUTINE getwfn_info
 +
@@ -457,8 +488,8 @@ diff -urN q-e-qe-5.3/PW/src/pwinterfacemod.f90 q-e-qe-5.3-patched/PW/src/pwinter
 +END MODULE pwinterfacemod
 diff -urN q-e-qe-5.3/PW/src/pwlib_getinfo.f90 q-e-qe-5.3-patched/PW/src/pwlib_getinfo.f90
 --- q-e-qe-5.3/PW/src/pwlib_getinfo.f90	1970-01-01 01:00:00.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/pwlib_getinfo.f90	2019-05-16 15:36:43.473007785 +0200
-@@ -0,0 +1,245 @@
++++ q-e-qe-5.3-patched/PW/src/pwlib_getinfo.f90	2019-07-17 11:12:21.960940309 +0200
+@@ -0,0 +1,254 @@
 +    !
 +    !------------------------------------------------------------------------
 +    !SUBROUTINE pwlib_getinfo(nat_,charge_,nup_,ndown_,nktot_,nkloc_,box_,  &
@@ -652,10 +683,19 @@ diff -urN q-e-qe-5.3/PW/src/pwlib_getinfo.f90 q-e-qe-5.3-patched/PW/src/pwlib_ge
 +      USE klist,           ONLY  : nkstot, xk,wk
 +      USE cell_base,       ONLY  : tpiba, at
 +     USE kinds,             ONLY:  DP     
++      USE lsda_mod, ONLY: lsda
 +
 +      REAL(DP), INTENT(OUT) :: klist_(3,nkstot), weights_(nkstot)
 +      integer :: j
-+    do j=1,nkstot
++      integer :: nkstot_
++
++    if(lsda)then
++      nkstot_=nkstot/2
++    else
++      nkstot_=nkstot
++    endif 
++
++    do j=1,nkstot_
 +      klist_(1,j)=at(1,1)*xk(1,j)+at(2,1)*xk(2,j)+at(3,1)*xk(3,j)
 +      klist_(2,j)=at(1,2)*xk(1,j)+at(2,2)*xk(2,j)+at(3,2)*xk(3,j)
 +      klist_(3,j)=at(1,3)*xk(1,j)+at(2,3)*xk(2,j)+at(3,3)*xk(3,j)
@@ -706,7 +746,7 @@ diff -urN q-e-qe-5.3/PW/src/pwlib_getinfo.f90 q-e-qe-5.3-patched/PW/src/pwlib_ge
 +  
 diff -urN q-e-qe-5.3/PW/src/pwlib_init.f90 q-e-qe-5.3-patched/PW/src/pwlib_init.f90
 --- q-e-qe-5.3/PW/src/pwlib_init.f90	1970-01-01 01:00:00.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/pwlib_init.f90	2019-07-11 15:41:06.870591542 +0200
++++ q-e-qe-5.3-patched/PW/src/pwlib_init.f90	2019-07-15 11:06:28.923029634 +0200
 @@ -0,0 +1,49 @@
 +!
 +! Copyright (C) 2001-2013 Quantum ESPRESSO group
@@ -744,7 +784,7 @@ diff -urN q-e-qe-5.3/PW/src/pwlib_init.f90 q-e-qe-5.3-patched/PW/src/pwlib_init.
 +  CALL environment_start ( 'PWSCF' )
 +  write(*,*) "environment_start done"
 +  !
-+  CALL read_input_file ('PW', 'scf.in' )
++  CALL read_input_file ('PW', 'QMCQEPack.scf.in' )
 +  write(*,*) "input file read"
 +  !
 +  ! ... Perform actual calculation
@@ -759,7 +799,7 @@ diff -urN q-e-qe-5.3/PW/src/pwlib_init.f90 q-e-qe-5.3-patched/PW/src/pwlib_init.
 +END SUBROUTINE pwlib_init
 diff -urN q-e-qe-5.3/PW/src/pwlib_scf.f90 q-e-qe-5.3-patched/PW/src/pwlib_scf.f90
 --- q-e-qe-5.3/PW/src/pwlib_scf.f90	1970-01-01 01:00:00.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/pwlib_scf.f90	2019-05-07 17:02:08.437764830 +0200
++++ q-e-qe-5.3-patched/PW/src/pwlib_scf.f90	2019-07-13 17:46:31.569200759 +0200
 @@ -0,0 +1,37 @@
 +!
 +! Copyright (C) 2001-2013 Quantum ESPRESSO group
@@ -800,7 +840,7 @@ diff -urN q-e-qe-5.3/PW/src/pwlib_scf.f90 q-e-qe-5.3-patched/PW/src/pwlib_scf.f9
 +END SUBROUTINE pwlib_scf
 diff -urN q-e-qe-5.3/PW/src/pwlib_setinfo.f90 q-e-qe-5.3-patched/PW/src/pwlib_setinfo.f90
 --- q-e-qe-5.3/PW/src/pwlib_setinfo.f90	1970-01-01 01:00:00.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/pwlib_setinfo.f90	2019-07-11 14:39:22.802218753 +0200
++++ q-e-qe-5.3-patched/PW/src/pwlib_setinfo.f90	2019-07-13 17:46:31.569200759 +0200
 @@ -0,0 +1,214 @@
 +    !
 +    !------------------------------------------------------------------------
@@ -1018,7 +1058,7 @@ diff -urN q-e-qe-5.3/PW/src/pwlib_setinfo.f90 q-e-qe-5.3-patched/PW/src/pwlib_se
 +  
 diff -urN q-e-qe-5.3/PW/src/read_file.f90 q-e-qe-5.3-patched/PW/src/read_file.f90
 --- q-e-qe-5.3/PW/src/read_file.f90	2016-01-08 16:25:24.000000000 +0100
-+++ q-e-qe-5.3-patched/PW/src/read_file.f90	2019-07-11 14:46:13.064051617 +0200
++++ q-e-qe-5.3-patched/PW/src/read_file.f90	2019-07-13 17:46:31.569200759 +0200
 @@ -177,6 +177,7 @@
    ! ... allocation
    !
