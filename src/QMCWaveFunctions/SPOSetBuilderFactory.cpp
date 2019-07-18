@@ -198,7 +198,8 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
 #endif
   }
 ///////////////////
-  else if(type.find("interface")<type.size())
+  //else if(type.find("interface")<type.size())
+  else if(type.find("qmcqepack")<type.size())
   {
     name=type_in;
 #if defined(HAVE_EINSPLINE)
