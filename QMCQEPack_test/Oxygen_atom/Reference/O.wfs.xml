@@ -5,10 +5,7 @@
 <?iotk qe_syntax="F"?>
 <qmcsystem>
   <wavefunction name="psi0" target="e">
-<!-- Uncomment this out to use plane-wave basis functions
-    <determinantset type="PW" href="O.pwscf.h5" version="1.10">
---> 
-      <determinantset type="interface" href="O.pwscf.h5" sort="1" tilematrix="1 0 0 0 1 0 0 0 1" twistnum="0" source="ion0"
+      <determinantset type="qmcqepack" href="O.pwscf.h5" sort="1" tilematrix="1 0 0 0 1 0 0 0 1" twistnum="0" source="ion0"
 version="0.10">
         <slaterdeterminant>
           <determinant id="updet" size="4">

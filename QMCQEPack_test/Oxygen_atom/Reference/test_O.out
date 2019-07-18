@@ -10,9 +10,9 @@
       https://doi.org/10.1088/1361-648X/aab9c3
 
   Git branch: QMCQEPack
-  Last git commit: 5c7c0a37da35c199fc7d7e36f528fc8479a3da50
-  Last git commit date: Wed Jul 17 19:57:25 2019 +0200
-  Last git commit subject: QE patch update
+  Last git commit: 4f9a96d6ae0c35e79479e4835c891b7595a3bf33-dirty
+  Last git commit date: Thu Jul 18 16:17:54 2019 +0200
+  Last git commit subject: Added QMCQEPack_test folder with O and H tests
 =====================================================
   Global options 
 
@@ -33,7 +33,7 @@
   Input XML = test_O.input.xml
 
   Project = test_O
-  date    = 2019-07-18 16:04:39 CEST
+  date    = 2019-07-18 17:42:16 CEST
   host    = mdlspc78
 
  Random Number
@@ -89,8 +89,8 @@ WaveFunctionFactory::setInterface: interface=0
  Wavefunction setup: 
  ------------------- 
   Name: psi0
-  Created SPOSet builder named 'interface' of type interface
-Reuse SPOSetBuilder "interface" type interface
+  Created SPOSet builder named 'qmcqepack' of type qmcqepack
+Reuse SPOSetBuilder "qmcqepack" type qmcqepack
   Building SPOSet '' with '' basis set.
   TileMatrix = 
  [  1  0  0
@@ -99,11 +99,11 @@ Reuse SPOSetBuilder "interface" type interface
   Generating 4 orbitals from Quantum Espresso file.
 ESPWSCFInterface::initialize().  initialized=0
  ESPWSCFInterface::initialize() commID = 1
- MPI_WORLD_COMM = 0x56457fa05380
+ MPI_WORLD_COMM = 0x563fdc24d380
  pwlib is initialized 
  mp_startup done
 
-     Program PWSCF v.5.3.0 starts on 18Jul2019 at 16: 4:39 
+     Program PWSCF v.5.3.0 starts on 18Jul2019 at 17:42:16 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -286,7 +286,7 @@ ESPWSCFInterface::initialize().  initialized=0
 
      negative rho (up, down):  5.971E-02 8.603E-02
 
-     total cpu time spent up to now is       14.8 secs
+     total cpu time spent up to now is       14.9 secs
 
      total energy              =     -27.90837366 Ry
      Harris-Foulkes estimate   =     -28.17596448 Ry
@@ -301,7 +301,7 @@ ESPWSCFInterface::initialize().  initialized=0
 
      negative rho (up, down):  9.608E-02 1.140E-01
 
-     total cpu time spent up to now is       18.0 secs
+     total cpu time spent up to now is       18.1 secs
 
      total energy              =     -27.77925064 Ry
      Harris-Foulkes estimate   =     -27.93739779 Ry
@@ -316,7 +316,7 @@ ESPWSCFInterface::initialize().  initialized=0
 
      negative rho (up, down):  1.104E-01 1.230E-01
 
-     total cpu time spent up to now is       21.6 secs
+     total cpu time spent up to now is       21.8 secs
 
      total energy              =     -27.82369279 Ry
      Harris-Foulkes estimate   =     -27.82977792 Ry
@@ -332,7 +332,7 @@ ESPWSCFInterface::initialize().  initialized=0
      Magnetic moment per site:
      atom:    1    charge:    0.2127    magn:    0.0108    constr:    0.0000
 
-     total cpu time spent up to now is       24.8 secs
+     total cpu time spent up to now is       25.0 secs
 
      End of self-consistent calculation
 
@@ -633,7 +633,7 @@ atom 0  species 0
 #Species: 1
 speciesids: 0
 Get Atomic Numbers...  In getAtomicNumbers, checking nat and nsp (as above)	1   1
-Initialized arrays before pwlib_getspecies_data_	1 -1  -0.5000000000 3 p
+Initialized arrays before pwlib_getspecies_data_	1 -1  -0.5000000000 3 °
 After pwlib_getspecies_data_:	1 6  15.9990000000 8 O
 Done!
 speciesids: 0	8
@@ -717,9 +717,9 @@ The complex coefficient cG[0] is 	(-0.0105981902,0.0125918645)
 Made it into ESPWSSCF Interface. 4135 0 3 0
 ngtot=4135
 The complex coefficient cG[0] is 	(0.0064915569,0.0173502071)
-  SplineAdoptorReader initialize_spline_pio 0.0210142030 sec
-Time spent in creating B-spline SPOs 0.0224968190sec
-Reuse SPOSetBuilder "interface" type interface
+  SplineAdoptorReader initialize_spline_pio 0.0210700880 sec
+Time spent in creating B-spline SPOs 0.0226316370sec
+Reuse SPOSetBuilder "qmcqepack" type qmcqepack
   Building SPOSet '' with '' basis set.
 DistincTwists.size()=1 in OccupyBandsInterface
  spin=1 sortBands=1 numOrbs=2
@@ -753,8 +753,8 @@ The complex coefficient cG[0] is 	(-0.0768908015,0.0211118466)
 Made it into ESPWSSCF Interface. 4135 1 1 0
 ngtot=4135
 The complex coefficient cG[0] is 	(0.0000423013,0.0004003086)
-  SplineAdoptorReader initialize_spline_pio 0.0098977520 sec
-Time spent in creating B-spline SPOs 0.0104701560sec
+  SplineAdoptorReader initialize_spline_pio 0.0099341590 sec
+Time spent in creating B-spline SPOs 0.0105870020sec
   Creating a determinant updet group=0 sposet=updet
   Reusing a SPO set updet
 Using DiracDeterminant with DelayedUpdate engine
@@ -873,7 +873,7 @@ QMCHamiltonian::addOperatorType added type pseudo named PseudoPot
 ParticleSetPool::randomize 
 <init source="ion0" target="e">
 </init>
-  Initialization Execution time = 25.05 secs
+  Initialization Execution time = 25.27 secs
 =========================================================
  Summary of QMC systems 
 =========================================================
@@ -973,12 +973,12 @@ ParticleSetPool has:
   CloneManager::makeClones makes 4 clones for W/Psi/H.
   Cloning methods for both Psi and H are used
 ===== Memory Usage before cloning =====
-Available memory on node 0, free + buffers : 2064 MB
-Memory footprint by rank 0 on node 0       : 132 MB
+Available memory on node 0, free + buffers : 1563 MB
+Memory footprint by rank 0 on node 0       : 126 MB
 ==================================================
 ===== Memory Usage after cloning =====
-Available memory on node 0, free + buffers : 2064 MB
-Memory footprint by rank 0 on node 0       : 133 MB
+Available memory on node 0, free + buffers : 1563 MB
+Memory footprint by rank 0 on node 0       : 126 MB
 ==================================================
   Initial partition of walkers 0 1 2 3 4 
 
@@ -988,8 +988,8 @@ Memory footprint by rank 0 on node 0       : 133 MB
   Walker distribution on root = 0 1 2 3 4 
   Using Locality Approximation
 ===== Memory Usage after the buffer registration =====
-Available memory on node 0, free + buffers : 2063 MB
-Memory footprint by rank 0 on node 0       : 133 MB
+Available memory on node 0, free + buffers : 1563 MB
+Memory footprint by rank 0 on node 0       : 126 MB
 ==================================================
   Anonymous Buffer size per walker : 2976 Bytes.
 MEMORY increase 0 MB VMC::resetRun
@@ -1000,8 +1000,8 @@ MEMORY increase 0 MB VMC::resetRun
     reference energy   = -13.8658
     reference variance = 0.96532
 ====================================================
-  QMC Execution time = 6.6914e+01 secs
-  Total Execution time = 6.6915e+01 secs
+  QMC Execution time = 6.6918e+01 secs
+  Total Execution time = 6.6918e+01 secs
 
 =========================================================
   A new xml input file : test_O.s000.cont.xml
