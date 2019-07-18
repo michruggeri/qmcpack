@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<simulation>
+
+   <project id="test_O" series="1">
+   <host>mdlspc78</host><date>Thu Jul 18 16:04:39 2019
+</date></project>
+   <random seed="49154"/>
+
+   <include href="O.ptcl.xml"/>
+   <include href="O.wfs.xml"/>
+ 
+   <hamiltonian name="h0" type="generic" target="e">
+      <pairpot type="coulomb" name="ElecElec" source="e" target="e"/>
+      <pairpot type="coulomb" name="IonIon" source="ion0" target="ion0"/>
+      <pairpot type="pseudo" name="PseudoPot" source="ion0" wavefunction="psi0" format="xml">
+         <pseudo elementType="O" href="O.BFD.xml"/>
+      </pairpot>
+   </hamiltonian><mcwalkerset fileroot="test_O.s000" node="-1" nprocs="1" version="3 7" collected="yes"/>
+
+   <qmc method="vmc" move="pbyp" checkpoint="-1">
+      <parameter name="timestep">    0.3           </parameter>
+      <parameter name="warmupSteps">    50            </parameter>
+      <parameter name="blocks">    2000           </parameter>
+      <parameter name="steps">    200           </parameter>
+      <parameter name="subSteps">    1             </parameter>
+      <parameter name="walkers">    1             </parameter>
+      <parameter name="useDrift">    no            </parameter>
+   </qmc>
+</simulation>
