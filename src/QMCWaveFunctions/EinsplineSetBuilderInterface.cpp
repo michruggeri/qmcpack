@@ -879,11 +879,11 @@ bool
 
 //   for (int i=0; i<IonTypes.size(); i++)
 //     app_log() << "Atom type(" << i << ") = " << IonTypes[i] << std::endl;
-   app_log()<<"get Ion Positions"<<std::endl;
+//   app_log()<<"get Ion Positions"<<std::endl;
    esinterface->getIonPositions(IonPos);
 //   app_log() <<"got teh Positions! I think"<<std::endl;
-   for(int i=0;i<NumAtoms;i++)
-     app_log() << i << "\t" <<  IonPos[i][0] << "\t" << IonPos[i][1] << "\t" << IonPos[i][2] << "\n"; 
+//   for(int i=0;i<NumAtoms;i++)
+//     app_log() << i << "\t" <<  IonPos[i][0] << "\t" << IonPos[i][1] << "\t" << IonPos[i][2] << "\n"; 
 
    //esinterface->getAtomicOrbitals(AtomicOrbitals);
 
