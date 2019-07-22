@@ -278,7 +278,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
   void initialize_spline_pio_gather(int spin, const BandInfoGroup& bandgroup)
   {
     //distribute bands over processor groups
-    int Nbands            = bandgroup.getNumDistinctOrbitals();
+/*    int Nbands            = bandgroup.getNumDistinctOrbitals();
     const int Nprocs      = myComm->size();
     const int Nbandgroups = std::min(Nbands, Nprocs);
     Communicate band_group_comm(*myComm, Nbandgroups);
@@ -314,7 +314,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
         fft_spline(cG, ti);
         bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
       }
-      this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
+      //this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
     }
 
     myComm->barrier();
@@ -328,6 +328,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
     now.restart();
     bspline->bcast_tables(myComm);
     app_log() << "  Time to bcast the table = " << now.elapsed() << std::endl;
+  */
   }
 
   void initialize_spline_psi_r(int spin, const BandInfoGroup& bandgroup)
@@ -381,7 +382,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     int Nbands            = bandgroup.getNumDistinctOrbitals();
     const int Nprocs      = myComm->size();
     const int Nbandgroups = std::min(Nbands, Nprocs);
-//    Communicate band_group_comm(*myComm, Nbandgroups);
+    Communicate band_group_comm(*myComm, Nbandgroups);
 //    std::cout << "band_group_comm ready  " << std::endl;
     std::vector<int> band_groups(Nbandgroups + 1, 0);
     FairDivideLow(Nbands, Nbandgroups, band_groups);
@@ -395,10 +396,11 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     const std::vector<BandInfo>& cur_bands = bandgroup.myBands;
     ESInterfaceBase* esinterface(0);
     esinterface=mybuilder->get_interface();
+//    int Nbands            = esinterface->getNumBands();
 
     //this will be parallelized with OpenMP
 {
-    //for(int iorb=iorb_first; iorb<iorb_last; ++iorb)
+//    for(int iorb=iorb_first; iorb<iorb_last; ++iorb)
     for(int iorb=0; iorb<Nbands; ++iorb)
     {
 //    if (band_group_comm.isGroupLeader())
@@ -412,7 +414,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     mpi::bcast(*myComm,cG);
         int iorb_h5   = bspline->BandIndexMap[iorb];
         int ti        = cur_bands[iorb_h5].TwistIndex;
-        //std::cout << cG[0] << std::endl;
+        std::cout << "Ue', the complex coefficient is \t " << cG[0] << std::endl;
         double total_norm = compute_norm(cG);
         if ((checkNorm) && (std::abs(total_norm - 1.0) > PW_COEFF_NORM_TOLERANCE))
         {
@@ -427,7 +429,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
         fft_spline(cG, ti);
         bspline->set_spline(spline_r, spline_i, cur_bands[iorb_h5].TwistIndex, iorb, 0);
       }  
-      //this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
+      this->create_atomic_centers_Gspace(cG, band_group_comm, iorb);
     }
   }
 //    myComm->barrier();

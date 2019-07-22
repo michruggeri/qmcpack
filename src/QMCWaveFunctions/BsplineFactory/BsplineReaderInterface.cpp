@@ -97,7 +97,7 @@ void BsplineReaderInterface::setCommon(xmlNodePtr cur)
     app_log() << "WARNING: disable orbital normalization check!" << std::endl;
     checkNorm = false;
   }
-  saveSplineCoefs = (saveCoefs == "yes" || qmc_common.save_wfs);
+  saveSplineCoefs = (saveCoefs == "yes");// || qmc_common.save_wfs);
 }
 
 SPOSet* BsplineReaderInterface::create_spline_set(int spin, xmlNodePtr cur)

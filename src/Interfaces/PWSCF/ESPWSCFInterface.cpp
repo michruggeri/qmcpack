@@ -253,7 +253,7 @@ void ESPWSCFInterface::getTwistData(std::vector<PosType>& TwistAngles,
    std::cout << "Done!\n";
    for (int i=0; i<nktot; i++)
    {
-     for(int j=0; j<OHMMS_DIM; j++) TwistAngles[i][j]=klist_tmp[i][j]; 
+     for(int j=0; j<OHMMS_DIM; j++) TwistAngles[i][j]=-klist_tmp[i][j]; 
      TwistSymmetry[i]=0;
    }
 
