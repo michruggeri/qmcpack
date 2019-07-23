@@ -12,7 +12,7 @@
 //
 // File created by: Ken Esler, kpesler@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
-#include "qmc_common.h"
+//#include "qmc_common.h"
 
 //#include "Particle/DistanceTable.h"
 #include "OhmmsData/AttributeSet.h"
@@ -357,7 +357,6 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 //  and broadcast to MPI groups. Variables broadcasted are listed in 
 //  EinsplineSetBuilderCommon.cpp EinsplineSetBuilder::BroadcastOrbitalInfo()
 //   
-  if(myComm->rank()==0){
 
   Timer orb_info_timer;
 // The tiling can be set by a simple vector, (e.g. 2x2x2), or by a
@@ -394,23 +393,19 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 // Read the basic orbital information, without reading all the //
 // orbitals themselves.                                        //
 /////////////////////////////////////////////////////////////////
-//  myComm->barrier();
-//  if (myComm->rank() == 1 || myComm->size()==1) // This is because Fortran wants to work with rank 1 and not 0 (or is it?)
-  if (myComm->rank() == 0 || myComm->size()==1) 
+  if (myComm->rank() == 0) 
     if (!ReadOrbitalInfo())
     {
       app_error() << "Error reading orbital info from Espresso interface.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
-  std::cout << "In set_metadata, ReadOrbitalInfo is true" << std::endl;
-//  app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
-//  myComm->barrier();
-//  orb_info_timer.restart();
-
-  if (myComm->rank() == 0 || myComm->size()==1) // This is because Fortran wants to work with rank 1 and not 0 (or is it?)
+  app_log() << "In set_metadata, ReadOrbitalInfo is true" << std::endl;
+  app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
+  myComm->barrier();
+  orb_info_timer.restart();
   BroadcastOrbitalInfo();
 
-//  app_log() <<  "TIMER  EinsplineSetBuilder::BroadcastOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
+  app_log() <<  "TIMER  EinsplineSetBuilder::BroadcastOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
   app_log().flush();
 
 // setup primitive cell and supercell
@@ -418,13 +413,12 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
   SuperCell.set(SuperLattice);
   GGt=dot(transpose(PrimCell.G), PrimCell.G);
 //  for (int iat=0; iat<AtomicOrbitals.size(); iat++)
-//    AtomicOrbitals[iat].Lattice = Lattice;
+//    AtomicOrbitals[iat].Lattice = Lattice;  This is done by the interface
 
 // Now, analyze the k-point mesh to figure out the what k-points  are needed
   TwistNum = TwistNum_inp;
   AnalyzeTwists2();
   std::cout << "Exiting set_metadata\n";
-  }/////////////////////////////////////////
 }
 
 SPOSet* EinsplineSetBuilderInterface::createSPOSetFromXML(xmlNodePtr cur)
@@ -958,7 +952,7 @@ bool
    std::cout << "Calling getTwistData...  ";
    esinterface->getTwistData(TwistAngles, dummy, TwistSymmetry);
    std::cout << "Done!\t TwistAngles[0]:  " << TwistAngles[0] << std::endl;
-
+/*
   if(qmc_common.use_density)
   {
     APP_ABORT("So...  Density not implemented yet in interface.  Because I'm lazy")
@@ -1066,7 +1060,7 @@ bool
   {
     app_log() << "   Skip initialization of the density" << std::endl;
   }
-
+*/
   std::cout << "Returning from ReadOrbitalInfo" << std::endl; 
    // AAAAAAAAAAAAAAAAA
 //   esinterface->getReducedGVecs(Gvecs,0);
