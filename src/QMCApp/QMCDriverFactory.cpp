@@ -22,11 +22,14 @@
  */
 #include <queue>
 
+
+#include "Particle/MCPopulation.h"
 #include "QMCApp/QMCDriverFactory.h"
 #include "QMCApp/WaveFunctionPool.h"
 #include "QMCApp/HamiltonianPool.h"
 #include "QMCWaveFunctions/TrialWaveFunction.h"
 #include "QMCDrivers/VMC/VMCFactory.h"
+#include "QMCDrivers/VMC/VMCFactoryNew.h"
 #include "QMCDrivers/DMC/DMCFactory.h"
 #include "QMCDrivers/RMC/RMCFactory.h"
 #include "QMCDrivers/QMCOptimize.h"
@@ -192,20 +195,20 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   {
     if (xmlStrEqual(tcur->name, (const xmlChar*)"qmcsystem"))
     {
-      const xmlChar* t = xmlGetProp(tcur, (const xmlChar*)"wavefunction");
-      if (t != NULL)
+      const XMLAttrString wf_name(tcur, "wavefunction");
+      if (!wf_name.empty())
       {
-        targetPsi.push(wavefunction_pool.getWaveFunction((const char*)t));
+        targetPsi.push(wavefunction_pool.getWaveFunction(wf_name));
       }
       else
       {
         app_warning() << " qmcsystem does not have wavefunction. Assign 0" << std::endl;
         targetPsi.push(0);
       }
-      t = xmlGetProp(tcur, (const xmlChar*)"hamiltonian");
-      if (t != NULL)
+      const XMLAttrString ham_name(tcur, "hamiltonian");
+      if (!ham_name.empty())
       {
-        targetH.push(hamiltonian_pool.getHamiltonian((const char*)t));
+        targetH.push(hamiltonian_pool.getHamiltonian(ham_name));
       }
       else
       {
@@ -253,9 +256,9 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   }
   else if (das.new_run_type == QMCRunType::VMC_BATCH)
   {
-    APP_ABORT("VMCBatch driver not yet supported");
-    // DFCreator<VMC_BATCH> dfc(curQmcModeBits.to_ulong(), cur);
-    // qmcDriver = dfc(qmc_system, *primaryPsi, *primaryH, particle_pool, hamiltonian_pool, wavefunction_pool, comm);
+    VMCFactoryNew fac(das.what_to_do.to_ulong(), cur);
+    MCPopulation qmc_pop(qmc_system);
+    new_driver.reset(fac.create(qmc_pop, *primaryPsi, *primaryH, particle_pool, hamiltonian_pool, wavefunction_pool, comm));
   }
   else if (das.new_run_type == QMCRunType::DMC)
   {
