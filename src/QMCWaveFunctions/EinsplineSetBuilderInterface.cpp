@@ -322,7 +322,8 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
 //  and broadcast to MPI groups. Variables broadcasted are listed in 
 //  EinsplineSetBuilderCommon.cpp EinsplineSetBuilder::BroadcastOrbitalInfo()
 //   
-  if(myComm->rank()==0){
+//  if(myComm->rank()==0)
+{
 
   Timer orb_info_timer;
 // The tiling can be set by a simple vector, (e.g. 2x2x2), or by a
@@ -367,11 +368,11 @@ void EinsplineSetBuilderInterface::set_metadata(int numOrbs, int TwistNum_inp)
       app_error() << "Error reading orbital info from Espresso interface.  Aborting.\n";
       APP_ABORT("EinsplineSetBuilder::createSPOSet");
     }
-//  app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
-//  myComm->barrier();
-//  orb_info_timer.restart();
+  app_log() <<  "TIMER  EinsplineSetBuilder::ReadOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
+  myComm->barrier();
+  orb_info_timer.restart();
 
-  if (myComm->rank() == 0 || myComm->size()==1) // This is because Fortran wants to work with rank 1 and not 0 (or is it?)
+//  if (myComm->rank() == 0 || myComm->size()==1) // This is because Fortran wants to work with rank 1 and not 0 (or is it?)
   BroadcastOrbitalInfo();
 
 //  app_log() <<  "TIMER  EinsplineSetBuilder::BroadcastOrbitalInfo " << orb_info_timer.elapsed() << std::endl;
@@ -775,9 +776,9 @@ bool
    //Tensor<double,OHMMS_DIM> Lattice, RecipLattice, LatticeInv, GGt;
    //Tensor<int,OHMMS_DIM> TileMatrix;
    //std::cerr << "Declare the pointer to ESHDF5interface...";
-  if(myComm->size() > 1)
-    APP_ABORT(" EinsplineSetBuilderInterface::ReadOrbitalInfo(); The QMCQEPack interface at the moment works only for serial runs!\n");
-  OHMMS::Controller->barrier();
+//  if(myComm->size() > 1)
+//    APP_ABORT(" EinsplineSetBuilderInterface::ReadOrbitalInfo(); The QMCQEPack interface at the moment works only for serial runs!\n");
+//  OHMMS::Controller->barrier();
   ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
   myint = new ESPWSCFInterface(myComm);
   esinterface=static_cast<ESInterfaceBase*>(myint);
