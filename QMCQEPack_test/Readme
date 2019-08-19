@@ -1,6 +1,6 @@
 In this folder there are two tests for the QMCQEPack interface, each consisting in a simulation
 run for a simple physical system: four hydrogen atom in a square and an oxygen atom.
-In each folder there are the input file required to run a simulation, and a reference folder
+In each folder there are the input files required to run a simulation, and a reference folder
 with reference outputs.
 In both cases we firstly run a DFT simulation with Quantum Espresso (using a PBE and a LSDA functional
 for the hydrogen and oxygen cases respectively), then we generate the single particle orbitals and
