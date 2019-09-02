@@ -171,7 +171,9 @@ public:
   //static std::map<H5OrbSet,SPOSet*,H5OrbSet> SPOSetMap;
   std::map<H5OrbSet,SPOSet*,H5OrbSet> SPOSetMap;
   ///constructor
-  EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur);
+  EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur, std::string label);
+  //EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur);
+  std::string intlabel;
 
   ///destructor
   ~EinsplineSetBuilderInterface();

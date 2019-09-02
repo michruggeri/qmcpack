@@ -37,13 +37,13 @@ namespace qmcplusplus
 
 // Constructor (from EinsplineSetBuilderCommon.cpp)
 
-EinsplineSetBuilderInterface::EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur)
+EinsplineSetBuilderInterface::EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur,std::string label)
 : SPOSetBuilder(comm), TargetPtcl(p),ParticleSets(psets), MixedSplineReader(0), XMLRoot(cur), Format(QMCPACK),
 TileFactor(1,1,1), TwistNum(0), LastSpinSet(-1),
 NumOrbitalsRead(-1), NumMuffinTins(0), NumCoreStates(0),
 NumBands(0), NumElectrons(0), NumSpins(0), NumTwists(0),
 H5FileID(-1), makeRotations(false), MeshFactor(1.0), MeshSize(0,0,0),
-esinterface(0)
+esinterface(0),intlabel(label)
 {
   //assume one, not safe!! 
   myTableIndex=1;
@@ -68,9 +68,16 @@ esinterface(0)
   //and input file should be parsed.
 //  ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
 //  myint = new ESHDF5Interface(myComm);
-//  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
-//  myint = new ESPWSCFInterface(myComm);
-//  esinterface=static_cast<ESInterfaceBase*>(myint);
+  if(intlabel=="PWSCF"){
+    ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+    myint = new ESPWSCFInterface(myComm);
+    esinterface=static_cast<ESInterfaceBase*>(myint);
+  }
+  if(intlabel=="ESHDF"){
+    ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+    myint = new ESHDF5Interface(myComm);
+    esinterface=static_cast<ESInterfaceBase*>(myint);
+  }
 //  esinterface->initialize();
 }
 
@@ -779,9 +786,9 @@ bool
 //  if(myComm->size() > 1)
 //    APP_ABORT(" EinsplineSetBuilderInterface::ReadOrbitalInfo(); The QMCQEPack interface at the moment works only for serial runs!\n");
 //  OHMMS::Controller->barrier();
-  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
-  myint = new ESPWSCFInterface(myComm);
-  esinterface=static_cast<ESInterfaceBase*>(myint);
+///  ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
+///  myint = new ESPWSCFInterface(myComm);
+///  esinterface=static_cast<ESInterfaceBase*>(myint);
 
    esinterface->initialize();
 
