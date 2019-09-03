@@ -419,8 +419,9 @@ SPOSet* EinsplineSetBuilderInterface::createSPOSetFromXML(xmlNodePtr cur)
   std::string useGPU="no";
 #endif
   std::string GPUsharing="no";
-  NewTimer* spo_timer = new NewTimer("einspline::CreateSPOSetFromXML", timer_level_medium);
-  TimerManager.addTimer(spo_timer);
+//  NewTimer* spo_timer = new NewTimer("einspline::CreateSPOSetFromXML", timer_level_medium);
+//  TimerManager.addTimer(spo_timer);
+  NewTimer* spo_timer = TimerManager.createTimer("einspline::CreateSPOSetFromXML", timer_level_medium);
   spo_timer->start();
 // Why the brace here?
   {

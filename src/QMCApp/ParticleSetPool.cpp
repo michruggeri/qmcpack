@@ -355,7 +355,8 @@ ParticleSet* ParticleSetPool::createInterfaceParticleSet(xmlNodePtr cur, Particl
       //assign non-trivial positions for the quanmtum particles
       InitMolecularSystem mole(this);
       mole.initMolecule(ions,qp);
-      qp->R.setUnit(PosUnit::CartesianUnit);
+//      qp->R.setUnit(PosUnit::CartesianUnit);
+      qp->R.setUnit(PosUnit::Cartesian);
     }
     //for(int i=0; i<qp->getTotalNum(); ++i)
     //  cout << qp->GroupID[i] << " " << qp->R[i] << endl;
@@ -514,7 +515,7 @@ ParticleSet* ParticleSetPool::createESParticleSet(xmlNodePtr cur, const std::str
     if (qp->Lattice.SuperCellEnum == SUPERCELL_BULK)
     {
       makeUniformRandom(qp->R);
-      qp->R.setUnit(PosUnit::LatticeUnit);
+      qp->R.setUnit(PosUnit::Lattice);
       qp->convert2Cart(qp->R);
     }
     else
@@ -522,7 +523,7 @@ ParticleSet* ParticleSetPool::createESParticleSet(xmlNodePtr cur, const std::str
       //assign non-trivial positions for the quanmtum particles
       InitMolecularSystem mole(this);
       mole.initMolecule(ions, qp);
-      qp->R.setUnit(PosUnit::CartesianUnit);
+      qp->R.setUnit(PosUnit::Cartesian);
     }
     //for(int i=0; i<qp->getTotalNum(); ++i)
     //  std::cout << qp->GroupID[i] << " " << qp->R[i] << std::endl;
