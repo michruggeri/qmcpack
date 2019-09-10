@@ -48,9 +48,9 @@ public:
 
   inline bool empty() const { return myPool.empty(); }
 
-  TrialWaveFunction* getPrimary() { return primaryPsi; }
+  TrialWaveFunction* getPrimary() { return primary_psi_; }
 
-  void setPrimary(TrialWaveFunction* psi) { primaryPsi = psi; }
+  void setPrimary(TrialWaveFunction* psi) { primary_psi_ = psi; }
 
   TrialWaveFunction* getWaveFunction(const std::string& pname)
   {
@@ -82,7 +82,7 @@ public:
 
   /** assign a pointer of ParticleSetPool
    */
-  inline void setParticleSetPool(ParticleSetPool* pset) { ptclPool = pset; }
+  inline void setParticleSetPool(ParticleSetPool* pset) { ptcl_pool_ = pset; }
 
   /** return a xmlNode containing Jastrow
    * @param id name of the wave function
@@ -104,7 +104,7 @@ public:
 
 private:
   /// pointer to the primary TrialWaveFunction
-  TrialWaveFunction* primaryPsi;
+  TrialWaveFunction* primary_psi_;
 
   /// storage of WaveFunctionFactory
   PoolType myPool;
@@ -114,10 +114,8 @@ private:
    * TrialWaveFunction needs to know which ParticleSet object
    * is used as an input object for the evaluations.
    */
-  ParticleSetPool* ptclPool;
-
   InterfaceBase* spointerface;
-
+  ParticleSetPool* ptcl_pool_;
 };
 } // namespace qmcplusplus
 #endif
