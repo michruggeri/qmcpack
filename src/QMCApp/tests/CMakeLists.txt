@@ -35,7 +35,9 @@ ENDIF(QMC_CUDA)
 
 #USE_FAKE_RNG(${UTEST_EXE})
 #TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcdriver_unit qmcham qmcwfs qmcbase qmcutil qmcfakerng ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
-TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcdriver_unit qmcham qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
+#TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcdriver_unit qmcham qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
+TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcdriver_unit qmcham_unit qmcwfs qmcbase qmcutil ${QMC_UTIL_LIBS} ${MPI_LIBRARY} interface)
+
 
 #ADD_TEST(NAME ${UTEST_NAME} COMMAND "${QMCPACK_UNIT_TEST_DIR}/${UTEST_EXE}")
 ADD_UNIT_TEST(${UTEST_NAME} "${QMCPACK_UNIT_TEST_DIR}/${UTEST_EXE}")
