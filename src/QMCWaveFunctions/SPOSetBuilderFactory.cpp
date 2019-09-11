@@ -198,12 +198,23 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
 #endif
   }
 ///////////////////
-  else if(type.find("interface")<type.size())
+  //else if(type.find("interface")<type.size())
+  else if(type.find("interfaceh5")<type.size())
   {
     name=type_in;
 #if defined(HAVE_EINSPLINE)
     PRE << "EinsplineSetBuilder:  using libeinspline for B-spline orbitals.\n";
-    bb = new EinsplineSetBuilderInterface(targetPtcl, ptclPool, myComm, rootNode);
+    bb = new EinsplineSetBuilderInterface(targetPtcl, ptclPool, myComm, rootNode,"ESHDF");
+#else
+    PRE.error("Einspline is missing for B-spline orbitals",true);
+#endif
+  }
+  else if(type.find("qmcqepack")<type.size())
+  {
+    name=type_in;
+#if defined(HAVE_EINSPLINE)
+    PRE << "EinsplineSetBuilder:  using libeinspline for B-spline orbitals.\n";
+    bb = new EinsplineSetBuilderInterface(targetPtcl, ptclPool, myComm, rootNode,"PWSCF");
 #else
     PRE.error("Einspline is missing for B-spline orbitals",true);
 #endif

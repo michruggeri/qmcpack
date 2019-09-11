@@ -160,7 +160,8 @@ void ESInterfaceBase::getParticleSet(ParticleSet & P)
     int natoms=getNumAtoms();
     
     P.create(natoms);
-    P.R.InUnit=PosUnit::CartesianUnit;
+//    P.R.InUnit=PosUnit::CartesianUnit;
+    P.R.InUnit=PosUnit::Cartesian;
     getIonPositions(P.R);
     P.applyBC(P.R); //force them [0,1)
 
@@ -212,7 +213,8 @@ void ESInterfaceBase::getElectronParticleSet(ParticleSet& P)
     if(P.Lattice.SuperCellEnum == SUPERCELL_BULK)
     {
       makeUniformRandom(P.R);
-      P.R.setUnit(PosUnit::LatticeUnit);
+//      P.R.setUnit(PosUnit::LatticeUnit);
+      P.R.setUnit(PosUnit::Lattice);
       P.convert2Cart(P.R);
     }
     else
@@ -282,7 +284,8 @@ void ESInterfaceBase::bcastParticleSet(ParticleSet& P)
 
   myComm->bcast(pbuffer);
   myComm->barrier();
-  P.R.InUnit=PosUnit::CartesianUnit;
+//  P.R.InUnit=PosUnit::CartesianUnit;
+  P.R.InUnit=PosUnit::Cartesian;
   if(myComm->rank())
   {
     pbuffer.rewind();

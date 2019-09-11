@@ -24,7 +24,10 @@
 SET(QMCDRIVERS 
   SimpleFixedNodeBranch.cpp
   BranchIO.cpp
+  MCPopulation.cpp
   QMCDriver.cpp
+  QMCDriverInput.cpp
+  QMCDriverNew.cpp
   QMCOptimize.cpp
   QMCLinearOptimize.cpp
   QMCCorrelatedSamplingLinearOptimize.cpp
@@ -33,12 +36,15 @@ SET(QMCDRIVERS
   WaveFunctionTester.cpp
   WalkerControlBase.cpp
   CloneManager.cpp
+  ContextForSteps.cpp
   QMCUpdateBase.cpp
   GreenFunctionModifiers/DriftModifierBuilder.cpp
   GreenFunctionModifiers/DriftModifierUNR.cpp
   VMC/VMCUpdatePbyP.cpp
   VMC/VMCUpdateAll.cpp
   VMC/VMCFactory.cpp
+  VMC/VMCFactoryNew.cpp
+  VMC/VMCDriverInput.cpp
   DMC/DMC.cpp
   DMC/DMCUpdateAll.cpp
   DMC/DMCUpdatePbyPFast.cpp
@@ -57,6 +63,7 @@ SET(QMCDRIVERS
   ../Estimators/LocalEnergyEstimator.cpp
   ../Estimators/RMCLocalEnergyEstimator.cpp
   ../Estimators/EstimatorManagerBase.cpp
+  ../Estimators/EstimatorManagerCrowd.cpp
   ../Estimators/CollectablesEstimator.cpp
 )
 
@@ -68,7 +75,8 @@ IF(QMC_CUDA)
 ENDIF(QMC_CUDA)
 
   SET(QMCDRIVERS ${QMCDRIVERS} 
-      VMC/VMC.cpp
+    VMC/VMC.cpp
+    VMC/VMCBatched.cpp
       VMC/VMCLinearOpt.cpp
       QMCCostFunction.cpp
      )

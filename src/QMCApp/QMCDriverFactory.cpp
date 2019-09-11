@@ -22,11 +22,15 @@
  */
 #include <queue>
 
+
+#include "QMCDrivers/MCPopulation.h"
+#include "qmc_common.h"
 #include "QMCApp/QMCDriverFactory.h"
 #include "QMCApp/WaveFunctionPool.h"
 #include "QMCApp/HamiltonianPool.h"
 #include "QMCWaveFunctions/TrialWaveFunction.h"
 #include "QMCDrivers/VMC/VMCFactory.h"
+#include "QMCDrivers/VMC/VMCFactoryNew.h"
 #include "QMCDrivers/DMC/DMCFactory.h"
 #include "QMCDrivers/RMC/RMCFactory.h"
 #include "QMCDrivers/QMCOptimize.h"
@@ -42,6 +46,10 @@ namespace qmcplusplus
  *
  *  Copy elision should result in just a move of the
  *  DriverAssemblyState
+ *
+ *  Most (all) of this should be done by calling QMCDriverInput::readXML
+ *  At some point in driver refactoring this should go there and
+ *  QMCDriverInput created before the giant switch
  */
 QMCDriverFactory::DriverAssemblyState QMCDriverFactory::readSection(int curSeries, xmlNodePtr cur)
 {
@@ -192,20 +200,20 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   {
     if (xmlStrEqual(tcur->name, (const xmlChar*)"qmcsystem"))
     {
-      const xmlChar* t = xmlGetProp(tcur, (const xmlChar*)"wavefunction");
-      if (t != NULL)
+      const XMLAttrString wf_name(tcur, "wavefunction");
+      if (!wf_name.empty())
       {
-        targetPsi.push(wavefunction_pool.getWaveFunction((const char*)t));
+        targetPsi.push(wavefunction_pool.getWaveFunction(wf_name));
       }
       else
       {
         app_warning() << " qmcsystem does not have wavefunction. Assign 0" << std::endl;
         targetPsi.push(0);
       }
-      t = xmlGetProp(tcur, (const xmlChar*)"hamiltonian");
-      if (t != NULL)
+      const XMLAttrString ham_name(tcur, "hamiltonian");
+      if (!ham_name.empty())
       {
-        targetH.push(hamiltonian_pool.getHamiltonian((const char*)t));
+        targetH.push(hamiltonian_pool.getHamiltonian(ham_name));
       }
       else
       {
@@ -233,7 +241,7 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   ////flux is evaluated only with single-configuration VMC
   //if(curRunType ==QMCRunType::VMC && !curQmcModeBits[MULTIPLE_MODE])
   //{
-  //  QMCHamiltonianBase* flux=primaryH->getHamiltonian("Flux");
+  //  OperatorBase* flux=primaryH->getHamiltonian("Flux");
   //  if(flux == 0) primaryH->addOperator(new ConservedEnergy,"Flux");
   //}
   //else
@@ -253,9 +261,10 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   }
   else if (das.new_run_type == QMCRunType::VMC_BATCH)
   {
-    APP_ABORT("VMCBatch driver not yet supported");
-    // DFCreator<VMC_BATCH> dfc(curQmcModeBits.to_ulong(), cur);
-    // qmcDriver = dfc(qmc_system, *primaryPsi, *primaryH, particle_pool, hamiltonian_pool, wavefunction_pool, comm);
+    VMCFactoryNew fac(cur, das.what_to_do[UPDATE_MODE], qmc_common.qmc_counter);
+    MCPopulation qmc_pop(qmc_system, particle_pool.getParticleSet("e"), wavefunction_pool.getPrimary(), hamiltonian_pool.getPrimary());
+    new_driver.reset(
+        fac.create(std::move(qmc_pop), *primaryPsi, *primaryH, particle_pool, hamiltonian_pool, wavefunction_pool, comm));
   }
   else if (das.new_run_type == QMCRunType::DMC)
   {

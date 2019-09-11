@@ -29,7 +29,6 @@
 #include "OhmmsApp/RandomNumberControl.h"
 #include "Utilities/ProgressReportEngine.h"
 #include <qmc_common.h>
-#include "ADIOS/ADIOS_profile.h"
 #include "Utilities/FairDivide.h"
 #if !defined(REMOVE_TRACEMANAGER)
 #include "Estimators/TraceManager.h"
@@ -60,8 +59,6 @@ DMC::DMC(MCWalkerConfiguration& w,
   m_param.add(NonLocalMove, "nonlocalmove", "string");
   m_param.add(NonLocalMove, "nonlocalmoves", "string");
   m_param.add(mover_MaxAge, "MaxAge", "double");
-  //DMC overwrites ConstPopulation
-  ConstPopulation = false;
 }
 
 void DMC::resetUpdateEngines()

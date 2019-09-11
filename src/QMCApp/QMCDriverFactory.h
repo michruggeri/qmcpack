@@ -48,44 +48,6 @@ public:
     std::string traces_tag  = "none";
     QMCRunType new_run_type = QMCRunType::DUMMY;
   };
-/*
-<<<<<<< HEAD
-  ///current QMC mode determined by curQmcModeBits
-  unsigned long curQmcMode;
-
-  ///8-bit (ALTERNATE_MODE,SPACEWARP_MODE, MULTIPLE_MODE, UPDATE_MODE)
-  std::bitset<QMC_MODE_MAX> curQmcModeBits;
-
-  ///type of qmcdriver
-  QMCRunType curRunType;
-
-  ///name of the current QMCriver
-  std::string curMethod;
-
-  /** current MCWalkerConfiguration
-   */
-//  MCWalkerConfiguration* qmcSystem;
-
-  /** current QMCDriver
-   */
-//  QMCDriver* qmcDriver;
-
-  /** ParticleSet Pool
-   */
-//  ParticleSetPool* ptclPool;
-
-  /** TrialWaveFunction Pool
-   */
-//  WaveFunctionPool* psiPool;
-
-  /** QMCHamiltonian Pool
-   */
-//  HamiltonianPool* hamPool;
-//////
-  InterfaceBuilder* intfcbuilder;
-//////
-//=======
-//>>>>>>> e5453f17845f2ac8a099e5dfa03cd40c855dda57
   /** default constructor **/
   //QMCDriverFactory() ;
 
