@@ -16,9 +16,6 @@ namespace qmcplusplus
 
 void ESHDF5Interface::initialize()
 {
-   std::cerr << "Beginning the initialization... \n";
-   std::cerr << myComm->size() << std::endl;
-   std::cerr << myComm->rank() << std::endl;
    if(myComm->rank()==0){
    H5FileID = H5Fopen(H5FileName.c_str(),H5F_ACC_RDWR,H5P_DEFAULT);
    app_log()<<"Opened HDF5 File for reading... " << H5FileName.c_str() << "\n";
@@ -237,10 +234,8 @@ void ESHDF5Interface::getOrbEigenvals(const int spin, const int kid, std::vector
           << spin << "/eigenvalues";
     Vector<double> eigvals;
     HDFAttribIO<std::vector<double> > h_eigvals(eigenvals);
-    std::cerr << "adadasdasdasda\n";
     app_log() << ePath.str() << "\n";
     h_eigvals.read(H5FileID, ePath.str().c_str());
-    std::cerr << "qweqweqweqeqwe\n";
 
     return;
 }
@@ -337,9 +332,7 @@ bool ESHDF5Interface::getPsi_kspace(Vector<std::complex<double> > & cG,int spin,
 
         std::string s=psi_g_path(twistid,spin,orbid); //Ray:  HWI (Handle with interface)
         HDFAttribIO<Vector<std::complex<double> > > h_cg(cG);
-        std::cerr << "aaaa\n";
         h_cg.read(H5FileID, s.c_str());
-        std::cerr << "bbbb\n";
       }
         return true;	
         //return h5f.read(cG,s); //RAY:  HWI  (Handle with interface).

@@ -134,9 +134,6 @@ namespace qmcplusplus
    */
     inline std::string psi_g_path(int ti, int spin, int ib)
     {
-      std::cerr <<"---------\n";
-      std::cerr << ti << "   " << spin << "   " << ib << std::endl;
-      std::cerr <<"---------\n";
       std::ostringstream path;
       path << "/electrons/kpoint_" << ti
            << "/spin_" << spin << "/state_" << ib << "/psi_g";
