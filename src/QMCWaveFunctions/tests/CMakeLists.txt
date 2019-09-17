@@ -24,6 +24,7 @@ SET(UTEST_HDF_INPUT3 ${qmcpack_SOURCE_DIR}/tests/solids/LiH_solid_1x1x1_pp/LiH-a
 
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory "${UTEST_DIR}")
 MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.pwscf.h5)
+MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.h5)
 MAYBE_SYMLINK(${UTEST_HDF_INPUT2} ${UTEST_DIR}/bccH.pwscf.h5)
 MAYBE_SYMLINK(${UTEST_HDF_INPUT3} ${UTEST_DIR}/LiH-arb.pwscf.h5)
 
@@ -46,6 +47,7 @@ ENDIF()
 ADD_EXECUTABLE(${UTEST_EXE} test_wf.cpp test_bspline_jastrow.cpp test_counting_jastrow.cpp test_einset.cpp test_pw.cpp
                test_polynomial_eeI_jastrow.cpp test_dirac_det.cpp test_multi_dirac_determinant.cpp test_dirac_matrix.cpp
                test_wavefunction_factory.cpp test_rpa_jastrow.cpp test_example_he.cpp test_user_jastrow.cpp
+               test_interface_HDF5.cpp
                test_short_range_cusp_jastrow.cpp test_TrialWaveFunction.cpp ${MO_SRCS})
 TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
 
