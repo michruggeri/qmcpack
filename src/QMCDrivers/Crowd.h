@@ -28,8 +28,10 @@ class Crowd
 {
 public:
   using MCPWalker = MCPopulation::MCPWalker;
+  using WFBuffer = MCPopulation::WFBuffer;
   using GradType = QMCTraits::GradType;
   using RealType = QMCTraits::RealType;
+  using FullPrecRealType = QMCTraits::FullPrecRealType;
   /** This is the data structure for walkers within a crowd
    */
   Crowd(EstimatorManagerBase& emb) : estimator_manager_crowd_(emb) {}
@@ -44,9 +46,12 @@ public:
 
   void startBlock(int steps) { estimator_manager_crowd_.startBlock(steps); }
 
+  EstimatorManagerCrowd& get_estimator_manager_crowd() { return estimator_manager_crowd_; }
   void addWalker(MCPWalker& walker, ParticleSet& elecs, TrialWaveFunction& twf, QMCHamiltonian& hamiltonian);
 
   void loadWalkers();
+
+  void accumulate(int global_walkers) { estimator_manager_crowd_.accumulate(global_walkers, mcp_walkers_, walker_elecs_); }
   
   auto beginWalkers() { return mcp_walkers_.begin(); }
   auto endWalkers() { return mcp_walkers_.end(); }
@@ -55,6 +60,7 @@ public:
   auto beginElectrons() { return walker_elecs_.begin(); }
   auto endElectrons() { return walker_elecs_.end(); }
 
+  RefVector<MCPWalker>& get_walkers() { return mcp_walkers_; }
   std::vector<std::reference_wrapper<ParticleSet>>& get_walker_elecs() { return walker_elecs_; }
   std::vector<std::reference_wrapper<TrialWaveFunction>>& get_walker_twfs() { return walker_twfs_; }
   std::vector<std::reference_wrapper<QMCHamiltonian>>& get_walker_hamiltonians() { return walker_hamiltonians_; }
@@ -65,13 +71,16 @@ public:
   std::vector<RealType>& get_log_gf() { return log_gf_; }
   std::vector<RealType>& get_log_gb() { return log_gb_; }
   std::vector<RealType>& get_prob() { return prob_; }
-
+  RefVector<WFBuffer>& get_mcp_wfbuffers() { return mcp_wfbuffers_; }
+  const EstimatorManagerCrowd& get_estimator_manager_crowd() const { return estimator_manager_crowd_; }
   int size() const { return mcp_walkers_.size(); }
 
   void clearResults();
   
 private:
   std::vector<std::reference_wrapper<MCPWalker>> mcp_walkers_;
+  RefVector<WFBuffer> mcp_wfbuffers_;
+
   std::vector<std::reference_wrapper<ParticleSet>> walker_elecs_;
   std::vector<std::reference_wrapper<TrialWaveFunction>> walker_twfs_;
   std::vector<std::reference_wrapper<QMCHamiltonian>> walker_hamiltonians_;
@@ -88,6 +97,7 @@ private:
   std::vector<RealType> log_gf_;
   std::vector<RealType> log_gb_;
   std::vector<RealType> prob_;
+
   /** }@ */
 };
 } // namespace qmcplusplus
