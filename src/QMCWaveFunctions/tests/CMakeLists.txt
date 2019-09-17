@@ -29,7 +29,7 @@ MAYBE_SYMLINK(${UTEST_HDF_INPUT2} ${UTEST_DIR}/bccH.pwscf.h5)
 MAYBE_SYMLINK(${UTEST_HDF_INPUT3} ${UTEST_DIR}/LiH-arb.pwscf.h5)
 
 SET(FILES_TO_COPY he_sto3g.wfj.xml  ne_def2_svp.wfnoj.xml hcn.structure.xml hcn.wfnoj.xml hcn_downdet.cuspInfo.xml hcn_updet.cuspInfo.xml
-    ethanol.structure.xml ethanol.wfnoj.xml ethanol_updet.cuspInfo.xml ethanol_downdet.cuspInfo.xml)
+    ethanol.structure.xml ethanol.wfnoj.xml ethanol_updet.cuspInfo.xml ethanol_downdet.cuspInfo.xml QMCQEPack.scf.in)
 
 FOREACH(fname ${FILES_TO_COPY})
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${fname}" ${UTEST_DIR})
@@ -47,7 +47,7 @@ ENDIF()
 ADD_EXECUTABLE(${UTEST_EXE} test_wf.cpp test_bspline_jastrow.cpp test_counting_jastrow.cpp test_einset.cpp test_pw.cpp
                test_polynomial_eeI_jastrow.cpp test_dirac_det.cpp test_multi_dirac_determinant.cpp test_dirac_matrix.cpp
                test_wavefunction_factory.cpp test_rpa_jastrow.cpp test_example_he.cpp test_user_jastrow.cpp
-               test_interface_HDF5.cpp
+               test_interface_HDF5.cpp test_interface_PWSCF.cpp
                test_short_range_cusp_jastrow.cpp test_TrialWaveFunction.cpp ${MO_SRCS})
 TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
 
