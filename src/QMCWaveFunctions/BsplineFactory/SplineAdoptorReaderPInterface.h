@@ -414,7 +414,7 @@ void initialize_spline_slow(int spin, const BandInfoGroup& bandgroup)
     mpi::bcast(*myComm,cG);
         int iorb_h5   = bspline->BandIndexMap[iorb];
         int ti        = cur_bands[iorb_h5].TwistIndex;
-        std::cout << "Ue', the complex coefficient is \t " << cG[0] << std::endl;
+ //       std::cout << "Ue', the complex coefficient is \t " << cG[0] << std::endl;
         double total_norm = compute_norm(cG);
         if ((checkNorm) && (std::abs(total_norm - 1.0) > PW_COEFF_NORM_TOLERANCE))
         {

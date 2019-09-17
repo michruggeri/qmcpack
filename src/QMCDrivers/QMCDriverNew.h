@@ -176,6 +176,8 @@ public:
    */
   void process(xmlNodePtr cur);
 
+  static void initialLogEvaluation(int crowd_id, UPtrVector<Crowd>& crowds);
+  
   /** should be set in input don't see a reason to set individually
    * @param pbyp if true, use particle-by-particle update
    */
@@ -315,6 +317,7 @@ public:
 
   int get_num_crowds() { return num_crowds_; }
   void set_num_crowds(int num_crowds, const std::string& reason);
+  DriftModifierBase& get_drift_modifier() const { return *drift_modifier_; }
   /** record the state of the block
    * @param block current block
    *
@@ -335,7 +338,7 @@ public:
   const std::string& get_root_name() const { return root_name_; }
   std::string getRotationName(std::string RootName);
   std::string getLastRotationName(std::string RootName);
-
+  
   NewTimer* checkpointTimer;
 
 private:
