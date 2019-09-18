@@ -76,6 +76,7 @@ esinterface(0),intlabel(label)
   if(intlabel=="ESHDF"){
     ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
     myint = new ESHDF5Interface(myComm);
+    myint->put(cur);
     esinterface=static_cast<ESInterfaceBase*>(myint);
   }
 //  esinterface->initialize();
@@ -874,10 +875,10 @@ bool
 //    HDFAttribIO<int> h_atomic_number (atomic_numbers[isp]);
 //    h_atomic_number.read(H5FileID, name.str().c_str());
 //  }
-  app_log()<<"Get Atomic Numbers...  ";
+//  app_log()<<"Get Atomic Numbers...  ";
 
   esinterface->getAtomicNumbers(atomic_numbers);
-  app_log()<<"Done!\n";
+//  app_log()<<"Done!\n";
   for (int isp=0; isp<num_species; isp++)
     app_log()<<"speciesids: "<<species_ids[isp] << "\t"<< atomic_numbers[isp] <<std::endl;
   IonTypes.resize(species_ids.size());
