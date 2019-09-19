@@ -30,7 +30,7 @@ namespace qmcplusplus
   public:
     ESPWSCFInterface(Communicate* mycomm):ESInterfaceBase(mycomm), myComm(mycomm), box_changed(false), pos_changed(false),
    					  nat(-1), nsp(-1), nbands(-1), nktot(-1), nkloc(-1), ngtot(-1),
-					  npw(-1), npwx(-1), nelec(-1), nup(-1), ndown(-1) 
+					  npw(-1), npwx(-1), nelec(-1), nup(-1), ndown(-1),PWFileName("pwscf.in") 
 					 {mesh[0]=mesh[1]=mesh[2]=-1; ifacename="ESPWSCF";initialized=false;}; 
    ~ESPWSCFInterface(){};
 
