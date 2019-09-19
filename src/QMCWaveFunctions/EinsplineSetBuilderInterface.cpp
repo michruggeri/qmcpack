@@ -71,6 +71,7 @@ esinterface(0),intlabel(label)
   if(intlabel=="PWSCF"){
     ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
     myint = new ESPWSCFInterface(myComm);
+    myint->put(cur);
     esinterface=static_cast<ESInterfaceBase*>(myint);
   }
   if(intlabel=="ESHDF"){

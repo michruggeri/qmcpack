@@ -10,7 +10,7 @@ struct
   float i;
 } f90complex;
 
-extern "C" void pwlib_init_(int * mpicomm);
+extern "C" void pwlib_init_(int * mpicomm, const char * pwname);
 extern "C" void pwlib_scf_();
 //extern "C" void pwlib_getinfo(int * nat, int * charge, int * nup, int * ndown , int * nktot, 
 //				int * nkloc_, double * box, double * kpts , double * wkp, 

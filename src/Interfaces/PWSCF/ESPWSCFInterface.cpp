@@ -23,9 +23,10 @@ void ESPWSCFInterface::initialize()
   {
     //int commID = myComm->getMPI();
     int commID = myComm->rank()+1;
+    const char * pwname = PWFileName.c_str();
     app_log()<<" ESPWSCFInterface::initialize() commID = "<<commID<<std::endl;
     app_log()<<" MPI_WORLD_COMM = "<<MPI_COMM_WORLD<<std::endl;
-    pwlib_init_(&commID);
+    pwlib_init_(&commID,pwname);
     app_log()<<" pwlib is initialized "<<std::endl;
 //  pwlib_setatompos();
 //    ParticlePos_t aaa;
