@@ -391,8 +391,8 @@ ParticleSet* ParticleSetPool::createESParticleSet(xmlNodePtr cur, const std::str
   attribs.add(lr_cut, "LR_dim_cutoff");
   attribs.add(spotype, "type");
   attribs.put(cur);
-//  if (h5name.empty())
-//    return qp;
+  if (h5name.empty())
+    return qp;
 
 #if OHMMS_DIM == 3
   ParticleSet* ions = getParticleSet(source);
