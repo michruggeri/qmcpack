@@ -12,23 +12,18 @@
     
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${QMCPACK_UNIT_TEST_DIR})
 
-SET(SRC_DIR wavefunction)
+SET(SRC_DIR interfaces)
 SET(UTEST_EXE test_${SRC_DIR})
 SET(UTEST_NAME deterministic-unit_test_${SRC_DIR})
 
-SET(UTEST_DIR ${qmcpack_BINARY_DIR}/tests/wavefunction)
-#SET(UTEST_HDF_INPUT ${qmcpack_SOURCE_DIR}/tests/solids/monoO_1x1x1_pp/pwscf.pwscf.h5)
+SET(UTEST_DIR ${qmcpack_BINARY_DIR}/tests/interfaces)
 SET(UTEST_HDF_INPUT ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp/pwscf.pwscf.h5)
-SET(UTEST_HDF_INPUT2 ${qmcpack_SOURCE_DIR}/tests/solids/bccH_1x1x1_ae/pwscf.pwscf.h5)
-SET(UTEST_HDF_INPUT3 ${qmcpack_SOURCE_DIR}/tests/solids/LiH_solid_1x1x1_pp/LiH-arb.pwscf.h5)
 
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory "${UTEST_DIR}")
+MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.h5)
 MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.pwscf.h5)
-MAYBE_SYMLINK(${UTEST_HDF_INPUT2} ${UTEST_DIR}/bccH.pwscf.h5)
-MAYBE_SYMLINK(${UTEST_HDF_INPUT3} ${UTEST_DIR}/LiH-arb.pwscf.h5)
 
-SET(FILES_TO_COPY he_sto3g.wfj.xml  ne_def2_svp.wfnoj.xml hcn.structure.xml hcn.wfnoj.xml hcn_downdet.cuspInfo.xml hcn_updet.cuspInfo.xml
-    ethanol.structure.xml ethanol.wfnoj.xml ethanol_updet.cuspInfo.xml ethanol_downdet.cuspInfo.xml pwscf.in O.BFD.upf)
+SET(FILES_TO_COPY pwscf.in O.BFD.upf)
 
 FOREACH(fname ${FILES_TO_COPY})
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${fname}" ${UTEST_DIR})
@@ -43,10 +38,9 @@ IF ((NOT QMC_COMPLEX) AND (NOT QMC_MIXED_PRECISION) AND (NOT QMC_CUDA))
   ENDIF()
 ENDIF()
 
-ADD_EXECUTABLE(${UTEST_EXE} test_wf.cpp test_bspline_jastrow.cpp test_counting_jastrow.cpp test_einset.cpp test_pw.cpp
-               test_polynomial_eeI_jastrow.cpp test_dirac_det.cpp test_multi_dirac_determinant.cpp test_dirac_matrix.cpp
-               test_wavefunction_factory.cpp test_rpa_jastrow.cpp test_example_he.cpp test_user_jastrow.cpp
-               test_short_range_cusp_jastrow.cpp test_TrialWaveFunction.cpp ${MO_SRCS})
+ADD_EXECUTABLE(${UTEST_EXE}
+               test_interface_HDF5.cpp test_interface_PWSCF.cpp
+               ${MO_SRCS})
 TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
 
 ADD_UNIT_TEST(${UTEST_NAME} "${QMCPACK_UNIT_TEST_DIR}/${UTEST_EXE}")
