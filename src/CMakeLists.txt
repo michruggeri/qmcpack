@@ -308,6 +308,7 @@ ENDIF()
     SUBDIRS(CUDA/tests)
     SUBDIRS(OpenMP/tests)
     SUBDIRS(Optimize/tests)
+    SUBDIRS(Interfaces/tests)
   endif() #}
 
 endif() #}}}
