@@ -54,6 +54,10 @@ ELSE()
   ADD_EXECUTABLE(${p} ${p}.cpp)
 ENDIF()
 
+add_library(pwinterface SHARED IMPORTED)
+set_target_properties(pwinterface PROPERTIES
+  IMPORTED_LOCATION "${qmcpack_SOURCE_DIR}/external_codes/quantum_espresso/q-e-qe-5.3/PW/src/libpwinterface.so")
+
 # Clean up git-rev-tmp.h after the build is finished
 ADD_CUSTOM_COMMAND(TARGET qmcpack
                    POST_BUILD
