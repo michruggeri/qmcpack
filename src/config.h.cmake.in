@@ -95,6 +95,9 @@
 /* Define to 1 if complex wavefunctions are used */
 #cmakedefine QMC_COMPLEX @QMC_COMPLEX@
 
+/* Define to 1 if pwscf interface is used */
+#cmakedefine QE_INTERFACE @QE_INTERFACE@
+
 /* Define if sincos function exists */
 #cmakedefine HAVE_SINCOS @HAVE_SINCOS@
 

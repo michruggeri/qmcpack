@@ -32,7 +32,9 @@
 
 //!!!!!!!!!!!!!!!!
 #include "Interfaces/ESHDF5/ESHDF5Interface.h"
+#if defined(QE_INTERFACE)
 #include "Interfaces/PWSCF/ESPWSCFInterface.h"
+#endif
 #include "Interfaces/ESInterfaceBase.h"
 #include "Interfaces/InterfaceBuilder.h"
 // For definition of h5orbset and declaration of BSplineReaderBase:

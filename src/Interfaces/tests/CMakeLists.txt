@@ -23,7 +23,9 @@ EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory "${UTEST_DIR}")
 MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.h5)
 MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.pwscf.h5)
 
-SET(FILES_TO_COPY pwscf.in O.BFD.upf)
+if(QE_INTERFACE)
+  SET(FILES_TO_COPY pwscf.in O.BFD.upf)
+endif()
 
 FOREACH(fname ${FILES_TO_COPY})
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${fname}" ${UTEST_DIR})
@@ -38,9 +40,13 @@ IF ((NOT QMC_COMPLEX) AND (NOT QMC_MIXED_PRECISION) AND (NOT QMC_CUDA))
   ENDIF()
 ENDIF()
 
-ADD_EXECUTABLE(${UTEST_EXE}
-               test_interface_HDF5.cpp test_interface_PWSCF.cpp
-               ${MO_SRCS})
+
+if(QE_INTERFACE AND QMC_COMPLEX)
+  ADD_EXECUTABLE(${UTEST_EXE} test_interface_HDF5.cpp test_interface_PWSCF.cpp ${MO_SRCS})
+else()
+  ADD_EXECUTABLE(${UTEST_EXE} test_interface_HDF5.cpp ${MO_SRCS})
+endif()
+
 TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
 
 ADD_UNIT_TEST(${UTEST_NAME} "${QMCPACK_UNIT_TEST_DIR}/${UTEST_EXE}")

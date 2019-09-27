@@ -69,10 +69,17 @@ esinterface(0),intlabel(label)
 //  ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
 //  myint = new ESHDF5Interface(myComm);
   if(intlabel=="PWSCF"){
+#if !defined(QE_INTERFACE)
+      app_error() << "Cannot use the Espresso interface \n"
+                  << "Please recompile with QE_INTERFACE=1.\n";
+      app_error().flush();
+      APP_ABORT("EinsplineSetBuilderInterface::EinsplineSetBuilderInterface");
+#else
     ESPWSCFInterface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)
     myint = new ESPWSCFInterface(myComm);
     myint->put(cur);
     esinterface=static_cast<ESInterfaceBase*>(myint);
+#endif
   }
   if(intlabel=="ESHDF"){
     ESHDF5Interface* myint;  // To be replaced with the proper type of interface (e.g. pwscf)

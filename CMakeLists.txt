@@ -125,6 +125,8 @@ SET (EXECUTABLE_OUTPUT_PATH ${qmcpack_BINARY_DIR}/bin CACHE PATH "Single output 
 # QMC_COMPLEX = true if using complex wavefunctions
 # QMC_MPI =  enable MPI
 # QMC_OMP = enable OMP
+#
+# QE_INTERFACE = true if Quantum Espresso (PWSCF) interface is used
 ######################################################################
 SET(OHMMS_DIM 3 CACHE STRING "Select physical dimension")
 SET(OHMMS_INDEXTYPE int)
@@ -165,6 +167,7 @@ SET(ENABLE_GCOV FALSE CACHE BOOL "Enable code coverage")
 SET(QMC_MPI 1 CACHE BOOL "Enable/disable MPI")
 SET(QMC_OMP 1 CACHE BOOL "Enable/disable OpenMP")
 SET(QMC_COMPLEX 0 CACHE BOOL "Build for complex binary")
+SET(QE_INTERFACE 0 CACHE BOOL "Build with Espresso interface")
 SET(PRINT_DEBUG 0 CACHE BOOL "Enable/disable debug printing")
 SET(QMC_CUDA 0 CACHE BOOL "Build with GPU support through CUDA")
 SET(ENABLE_CUDA 0 CACHE BOOL "Build with the second generation of GPU support through CUDA (production quality for AFQMC, experimental for real space)")

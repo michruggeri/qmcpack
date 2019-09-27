@@ -78,6 +78,10 @@ ADD_CUSTOM_COMMAND(TARGET qmcpack
     TARGET_LINK_LIBRARIES(${p} ${MPI_LIBRARY})
   ENDIF(MPI_LIBRARY)
 
+  IF(QE_INTERFACE)
+    TARGET_LINK_LIBRARIES(${p} ${qmcpack_SOURCE_DIR}/external_codes/quantum_espresso/q-e-qe-5.3/PW/src/libpwinterface.so mpi gfortran mpi_mpifh)
+  ENDIF(QE_INTERFACE)
+
 ENDFOREACH(p ${QMCSRCS})
 
 INSTALL(TARGETS qmcpack
