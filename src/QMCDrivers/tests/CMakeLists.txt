@@ -59,7 +59,6 @@ SET(DRIVER_TEST_SRC test_Crowd.cpp test_MCPopulation.cpp test_ContextForSteps.cp
 ADD_EXECUTABLE(${UTEST_EXE} ${DRIVER_TEST_SRC})
 
 USE_FAKE_RNG(${UTEST_EXE})
-#TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcdriver_unit qmcham qmcwfs qmcbase qmcutil qmcfakerng ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
 TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcdriver_unit qmcham qmcwfs qmcbase qmcutil qmcfakerng ${QMC_UTIL_LIBS} ${MPI_LIBRARY} interface)
 
 

@@ -60,7 +60,7 @@ ADD_CUSTOM_COMMAND(TARGET qmcpack
                    POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E remove ${GITREV_TMP})
 
-  TARGET_LINK_LIBRARIES(${p} qmc qmcdriver qmcham qmcwfs qmcbase qmcutil interface ${qmcpack_SOURCE_DIR}/external_codes/quantum_espresso/q-e-qe-5.3/PW/src/libpwinterface.so mpi gfortran mpi_mpifh)
+  TARGET_LINK_LIBRARIES(${p} qmc qmcdriver qmcham qmcwfs qmcbase qmcutil interface)
 
   IF(BUILD_AFQMC)
     TARGET_LINK_LIBRARIES(${p} afqmc)
