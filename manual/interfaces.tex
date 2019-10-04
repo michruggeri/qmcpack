@@ -1,0 +1,49 @@
+\section{Interfaces}
+\label{sec:interf}
+QMCPack includes a generic interface class to manage the generation of single particle orbitals (SPOs), along with the
+implementation of two derived classes for reading orbitals from and HDF5 file and generating the orbitals with a Quantum
+Espresso computation performed during the QMCPack run. In this section the behaviour of these classes is explained. 
+Other derived classes can be implemented e.g. to call other DFT codes from QMCPack, using these ones as reference.
+
+\subsection{The ESInterfaceBase class}
+The \ixml{ESInterfaceBase} class contains the definitions of types and virtual methods that are to be inherited by specific 
+interface derived classes, in particular the creator/distructor, methods to inizialize, finalize and update the 
+single particle orbitals and method to set/get from the interface relevant quantities (e.g. the number and position 
+of the atoms, the number and weights of the twists and the atomic orbital themselves).
+
+\subsection{The ESHDF5Interface class}
+The \ixml{ESHDF5Interface} class is derived from \ixml{ESInterfaceBase}; this class uses uses the generic interface 
+infrastructure to read and process information stored in a suitable HDF5 files, like e.g. the ones generated using 
+Quantum Espresso and pw2qmcpack.
+In a way using this class is an alternative of the default way of reading input using the keyword \ixml{bspline} in the \ixml{determinantset} xml block.
+In Listing \ref{list:h5example} we show an example of the use of this interface in the \ixml{determinantset} block. The element \ixml{href}
+refers to the name of the HDF5 input file. If not specified the file name will default to \ixml{pwscf.h5}.
+\begin{lstlisting}[style=QMCPXML,caption=Example of \ixml{determinantset} block using the HDF5 interface \label{list:h5example}]
+ <wavefunction name="psi0" target="e">
+  ...
+   <determinantset type="interfaceh5" href="O.pwscf.h5" sort="1" tilematrix="1 0 0 0 1 0 0 0 1" twistnum="0" source="ion0" version="0.10">
+  ...
+ </wavefunction>
+\end{lstlisting}
+
+\subsection{The ESPWSCFInterface class}
+When using the \ixml{ESPWSCFInterface} derived class we generate the SPOs during a QMCPack simulation, calling the \ixml{pw.x} program from
+within the simulation. In order to do so we need to properly patch and compile Quantum Espresso 5.3. In order to do so we have to execute the 
+\ixml{QMCQEPack_download_and_patch_qe.sh} script in the \ixml{external_codes/quantum_espresso} directory. After that we need to run the 
+\ixml{configure} script in the resulting directori \ixml{q-e-qe-5.3} and finally build the code using \ixml{make pw}. Note that when building the code 
+it may be required to use the internal Quantum Espresso version of the FFTW libraries. In order to do so if is sufficient to change in the \ixml{DFLAGS} field 
+of the \ixml{make.sys} file \ixml{-D__FFTW3} with \ixml{-D__FFTW}. The resulting \ixml{libpwinterface.so} library will
+ be included in QMCPack if QMCPack is built using the options \ixml{QMC_COMPLEX} and \ixml{QE_INTERFACE}, e.g. by using
+
+\ixml{cmake -DQMC_COMPLEX=1 -DQE_INTERFACE=1 <qmcpack directory>}.
+
+In Listing \ref{list:pwexample} we show an example of the use of this interface in the \ixml{determinantset} block. The element \ixml{href}
+refers to the name of the Quantum Espresso input file. If not specified the file name will default to \ixml{pwscf.in}. When run using this option QMCPack will call Quantum Espresso during the orbital generation, performing a DFT computation, splining and storing the SPOs and then it will go on with the regular QMC simulations specified in the input file. The Espresso standard output will be part of the QMCPack standard output.
+
+\begin{lstlisting}[style=QMCPXML,caption=Example of \ixml{determinantset} block using the PWSCF interface \label{list:pwexample}]
+ <wavefunction name="psi0" target="e">
+  ...
+      <determinantset type="qmcqepack" href="QMCQEPack.scf.in" sort="1" tilematrix="1 0 0 0 1 0 0 0 1" twistnum="0" source="ion" version="0.10">
+  ...
+ </wavefunction>
+\end{lstlisting}
