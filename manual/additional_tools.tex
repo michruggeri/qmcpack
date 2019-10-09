@@ -106,3 +106,4 @@ When using an ionized state, the three reference states are all set as ``1s(2)2p
 Unfortunately, if the generated UPF file is used in QE, the calculation may be incorrect because of the presence of ``ghost'' states. Potentially these can be removed by adjusting the local channel (e.g., by setting \ishell{--local_channel 1}, which chooses the p channel as the local channel instead of d.
 For this reason, validation of UPF PPs is always required from the third row and is strongly encouraged in general. For example, check that the expected ionization potential and electron affinities are obtained for the atom and that dimer properties are consistent with those obtained by a quantum chemistry code or a plane-wave code that does not use the Kleinman-Bylander projectors.
 \input{pseudopotentials}
+\input{interfaces}
