@@ -32,16 +32,16 @@ NonLocalECPotential::NonLocalECPotential(ParticleSet& ions,
                                          TrialWaveFunction& psi,
                                          bool computeForces,
                                          bool useVP)
-    : IonConfig(ions),
-      Psi(psi),
-      UseTMove(TMOVE_OFF),
+    : ForceBase(ions, els),
       myRNG(&Random),
-      nonLocalOps(els.getTotalNum()),
-      ComputeForces(computeForces),
-      IonNeighborElecs(ions),
+      IonConfig(ions),
+      Psi(psi),
+      Peln(els),
       ElecNeighborIons(els),
-      ForceBase(ions, els),
-      Peln(els)
+      IonNeighborElecs(ions),
+      UseTMove(TMOVE_OFF),
+      nonLocalOps(els.getTotalNum()),
+      ComputeForces(computeForces)
 {
   set_energy_domain(potential);
   two_body_quantum_domain(ions, els);
@@ -425,7 +425,8 @@ void NonLocalECPotential::markAffectedElecs(const DistanceTableData& myTable, in
   {
     if (PP[iat] == nullptr)
       continue;
-    RealType old_distance, new_distance;
+    RealType old_distance = 0.0;
+    RealType new_distance = 0.0;
     if (myTable.DTType == DT_SOA)
     {
       old_distance = myTable.Distances[iel][iat];
