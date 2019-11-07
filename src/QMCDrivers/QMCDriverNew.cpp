@@ -9,17 +9,6 @@
 // File refactored from: QMCDriver.cpp
 //////////////////////////////////////////////////////////////////////////////////////
 
-/** \file
- * Clean base class for Unified driver
- *  
- * This driver base class should be generic with respect to precision,
- * value type, device execution, and ...
- * It should contain no typdefs not related to compiler bugs or platform workarounds
- *
- * Some integer math is done in non performance critical areas in the clear and
- * not optimized way. Leave these alone.
- */
-
 #include <limits>
 #include <typeinfo>
 #include <cmath>
@@ -89,7 +78,11 @@ int QMCDriverNew::addObservable(const std::string& aname)
 QMCDriverNew::RealType QMCDriverNew::getObservable(int i) { return estimator_manager_->getObservable(i); }
 
 
-QMCDriverNew::~QMCDriverNew() {}
+QMCDriverNew::~QMCDriverNew()
+{
+  for(int i = 0; i < Rng.size(); ++i)
+    RandomNumberControl::Children[i] = Rng[i].release();
+}
 
 void QMCDriverNew::add_H_and_Psi(QMCHamiltonian* h, TrialWaveFunction* psi)
 {
@@ -114,16 +107,6 @@ void QMCDriverNew::add_H_and_Psi(QMCHamiltonian* h, TrialWaveFunction* psi)
  */
 void QMCDriverNew::process(xmlNodePtr cur)
 {
-  // if (qmcdriver_input_.get_reset_random() || RandomNumberControl)
-  // {
-
-  // if seeds are not made then neither are the children. So when MoveContexts are created a segfault occurs.
-  // For now it is unclear whether get_reset_random should always be true on the first run or what.
-  app_log() << "  Regenerate random seeds." << std::endl;
-  RandomNumberControl::make_seeds();
-  // }
-
-  
   setupWalkers();
 
   // If you really want to persist the MCPopulation it is not the business of QMCDriver to reset it.
@@ -141,6 +124,7 @@ void QMCDriverNew::process(xmlNodePtr cur)
   if (!estimator_manager_)
   {
     estimator_manager_ = new EstimatorManagerBase(myComm);
+    // TODO: remove this when branch engine no longer depends on estimator_mamanger_
     branch_engine_->setEstimatorManager(estimator_manager_);
     // This used to get updated as a side effect of setStatus
     branch_engine_->read(h5_file_root_);
@@ -368,11 +352,20 @@ void QMCDriverNew::createRngsStepContexts()
 
   Rng.resize(num_crowds_);
 
+  if (RandomNumberControl::Children.size() == 0)
+  {
+    app_warning() << "  Initializing global RandomNumberControl! "
+                  << "This message should not be seen in production code but only in unit tests." << std::endl;
+    RandomNumberControl::make_seeds();
+  }
+
   for(int i = 0; i < num_crowds_; ++i)
   {
-    Rng[i].reset(new RandomGenerator_t(*(RandomNumberControl::Children[i])));
-    step_contexts_[i].reset(new ContextForSteps(crowds_[i]->size(), population_.get_num_particles(),
-                                            population_.get_particle_group_indexes(), *(Rng[i])));
+    Rng[i].reset(RandomNumberControl::Children[i]);
+    // Ye: RandomNumberControl::Children needs to be replaced with unique_ptr and use Rng[i].swap()
+    RandomNumberControl::Children[i] = nullptr;
+    step_contexts_[i] = std::make_unique<ContextForSteps>(crowds_[i]->size(), population_.get_num_particles(),
+                                            population_.get_particle_group_indexes(), *(Rng[i]));
   }
 }
 
