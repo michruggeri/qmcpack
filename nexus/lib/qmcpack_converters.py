@@ -47,6 +47,7 @@
 import os
 from generic import obj
 from simulation import Simulation,SimulationInput,SimulationAnalyzer
+from pwscf import Pwscf
 from gamess import Gamess
 from pyscf_sim import Pyscf
 from quantum_package import QuantumPackage
@@ -99,12 +100,16 @@ class Pw2qmcpackInput(SimulationInput):
     var_types = dict()
     for v in ints:
         var_types[v]=int
+    #end for
     for v in floats:
         var_types[v]=float
+    #end for
     for v in strs:
         var_types[v]=str
+    #end for
     for v in bools:
         var_types[v]=bool
+    #end for
 
     allowed = set(ints+floats+strs+bools)
 
@@ -140,6 +145,7 @@ class Pw2qmcpackInput(SimulationInput):
             #end if
         #end for
     #end def read_text
+
 
     def write_text(self,filepath=None):
         contents = ''
@@ -194,32 +200,7 @@ class Pw2qmcpackAnalyzer(SimulationAnalyzer):
     #end def __init__
 
     def analyze(self):
-        if False:
-            import h5py
-            self.log('Fixing h5 file',n=5)
-
-            path = os.path.split(self.h5file)[0]
-            print os.getcwd()
-            print os.listdir('./')
-            if os.path.exists(path):
-                print os.listdir(path)
-            #end if
-            print self.h5file
-
-            h = h5py.File(self.h5file)
-            if 'electrons' in h:
-                elec = h['electrons']
-                nkpoints = 0
-                for name,val in elec.iteritems():
-                    if name.startswith('kpoint'):
-                        nkpoints+=1
-                    #end for
-                #end if
-                nkold = elec['number_of_kpoints'][0] 
-                self.log('Were',nkold,'kpoints, now',nkpoints,'kpoints',n=6)
-                elec['number_of_kpoints'][0] = nkpoints
-            #end for        
-        #end if
+        None
     #end def analyze
 
     def get_result(self,result_name):
@@ -238,15 +219,12 @@ class Pw2qmcpack(Simulation):
 
     def check_result(self,result_name,sim):
         calculating_result = False
-        inputpp = self.input.inputpp
         if result_name=='orbitals':
             calculating_result = True
-        else:
-            calculating_result = False
-            self.error('ability to check for result '+result_name+' has not been implemented')
         #end if        
         return calculating_result
     #end def check_result
+
 
     def get_result(self,result_name,sim):
         result = obj()
@@ -272,44 +250,60 @@ class Pw2qmcpack(Simulation):
         return result
     #end def get_result
 
+
     def incorporate_result(self,result_name,result,sim):
+        implemented = True
         if result_name=='orbitals':
-            pwin = sim.input.control
-            p2in = self.input.inputpp
-            pwprefix = 'pwscf'
-            p2prefix = 'pwscf'
-            pwoutdir = './'
-            p2outdir = './'
-            if 'prefix' in pwin:
-                pwprefix = pwin.prefix
-            if 'prefix' in p2in:
-                p2prefix = p2in.prefix
-            if 'outdir' in pwin:
-                pwoutdir = pwin.outdir
-            if 'outdir' in p2in:
-                p2outdir = p2in.outdir
-            if pwoutdir.startswith('./'):
-                pwoutdir = pwoutdir[2:]
-            if p2outdir.startswith('./'):
-                p2outdir = p2outdir[2:]
-            pwdir = os.path.abspath(os.path.join(sim.locdir ,pwoutdir))
-            p2dir = os.path.abspath(os.path.join(self.locdir,p2outdir))
-            errors = False
-            if pwdir!=p2dir:
-                self.error('to use orbitals, '+self.generic_identifier+' must have the same outdir as pwscf\n  pwscf outdir: '+pwdir+'\n  '+self.generic_identifier+' outdir: '+p2dir,exit=False)
-                errors = True
-            #end if
-            if pwprefix!=p2prefix:
-                self.error('to use orbitals, '+self.generic_identifier+' must have the same prefix as pwscf\n  pwscf prefix: '+pwprefix+'\n  '+self.generic_identifier+' prefix: '+p2prefix,exit=False)
-                errors = True
-            #end if
-            if errors:
-                self.error(self.generic_identifier+' cannot use orbitals from pwscf')
+            if isinstance(sim,Pwscf):
+                pwin = sim.input.control
+                p2in = self.input.inputpp
+                pwprefix = 'pwscf'
+                p2prefix = 'pwscf'
+                pwoutdir = './'
+                p2outdir = './'
+                if 'prefix' in pwin:
+                    pwprefix = pwin.prefix
+                #end if
+                if 'prefix' in p2in:
+                    p2prefix = p2in.prefix
+                #end if
+                if 'outdir' in pwin:
+                    pwoutdir = pwin.outdir
+                #end if
+                if 'outdir' in p2in:
+                    p2outdir = p2in.outdir
+                #end if
+                if pwoutdir.startswith('./'):
+                    pwoutdir = pwoutdir[2:]
+                #end if
+                if p2outdir.startswith('./'):
+                    p2outdir = p2outdir[2:]
+                #end if
+                pwdir = os.path.abspath(os.path.join(sim.locdir ,pwoutdir))
+                p2dir = os.path.abspath(os.path.join(self.locdir,p2outdir))
+                errors = False
+                if pwdir!=p2dir:
+                    self.error('to use orbitals, '+self.generic_identifier+' must have the same outdir as pwscf\n  pwscf outdir: '+pwdir+'\n  '+self.generic_identifier+' outdir: '+p2dir,exit=False)
+                    errors = True
+                #end if
+                if pwprefix!=p2prefix:
+                    self.error('to use orbitals, '+self.generic_identifier+' must have the same prefix as pwscf\n  pwscf prefix: '+pwprefix+'\n  '+self.generic_identifier+' prefix: '+p2prefix,exit=False)
+                    errors = True
+                #end if
+                if errors:
+                    self.error(self.generic_identifier+' cannot use orbitals from pwscf')
+                #end if
+            else:
+                implemented = False
             #end if
         else:
-            self.error('ability to incorporate result '+result_name+' has not been implemented')
+            implemented = False
+        #end if
+        if not implemented:
+            self.error('ability to incorporate result "{0}" from {1} has not been implemented'.format(result_name,sim.__class__.__name__))
         #end if                
     #end def incorporate_result
+
 
     def check_sim_status(self):
         outfile = os.path.join(self.locdir,self.outfile)
@@ -354,10 +348,12 @@ class Pw2qmcpack(Simulation):
         self.finished = files_exist and self.job.finished
     #end def check_sim_status
 
+
     def get_output_files(self):
         output_files = []
         return output_files
     #end def get_output_files
+
 
     def app_command(self):
         return self.app_name+'<'+self.infile
@@ -409,6 +405,12 @@ class Convert4qmcInput(SimulationInput):
         ion_tag            
         no_jastrow         
         production         
+        orbitals
+        multidet
+        gridtype
+        first
+        last
+        size
         ci                 
         read_initial_guess 
         target_state       
@@ -416,7 +418,7 @@ class Convert4qmcInput(SimulationInput):
         threshold          
         opt_det_coeffs
         zero_ci            
-        add_3body_J        
+        add_3body_J
         '''.split()
 
     input_aliases = obj(
@@ -436,6 +438,12 @@ class Convert4qmcInput(SimulationInput):
         ion_tag            = 'ion_tag',
         no_jastrow         = 'nojastrow',
         production         = 'production',
+        orbitals           = 'orbitals',
+        multidet           = 'multidet',
+        gridtype           = 'gridtype',
+        first              = 'first',
+        last               = 'last',
+        size               = 'size',
         ci                 = 'ci',
         read_initial_guess = 'readInitialGuess',
         target_state       = 'TargetState',
@@ -464,6 +472,12 @@ class Convert4qmcInput(SimulationInput):
         ion_tag            = str, # particeset tag
         no_jastrow         = bool,
         production         = bool,
+        orbitals           = str,
+        multidet           = str,
+        gridtype           = str,
+        first              = float,
+        last               = float,
+        size               = int,
         ci                 = str, # file path
         read_initial_guess = int,
         target_state       = int,
@@ -492,6 +506,12 @@ class Convert4qmcInput(SimulationInput):
         ion_tag            = None,
         no_jastrow         = False,
         production         = False,
+        orbitals           = None,
+        multidet           = None,
+        gridtype           = None,
+        first              = None,
+        last               = None,
+        size               = None,
         ci                 = None, # gamess specific below
         read_initial_guess = None,
         target_state       = None,
@@ -507,7 +527,7 @@ class Convert4qmcInput(SimulationInput):
         # check that only allowed keyword inputs are provided
         invalid = set(kwargs.keys())-set(self.input_types.keys())
         if len(invalid)>0:
-            self.error('invalid inputs encountered\nvalid keyword inputs are: {0}'.format(sorted(self.input_types.keys())))
+            self.error('invalid inputs encountered\ninvalid keywords: {0}\nvalid keyword inputs are: {1}'.format(sorted(invalid),sorted(self.input_types.keys())))
         #end if
 
         # assign inputs
@@ -688,9 +708,6 @@ class Convert4qmc(Simulation):
             calculating_result = True
         elif result_name=='particles':
             calculating_result = True
-        else:
-            calculating_result = False
-            self.error('ability to check for result '+result_name+' has not been implemented')
         #end if        
         return calculating_result
     #end def check_result
@@ -1031,14 +1048,10 @@ class PyscfToAfqmc(Simulation):
 
     def check_result(self,result_name,sim):
         calculating_result = False
-        input = self.input
         if result_name=='wavefunction':
-            calculating_result = input.output is not None
+            calculating_result = self.input.output is not None
         elif result_name=='hamiltonian':
-            calculating_result = input.output is not None
-        else:
-            calculating_result = False
-            self.error('ability to check for result '+result_name+' has not been implemented')
+            calculating_result = self.input.output is not None
         #end if        
         return calculating_result
     #end def check_result

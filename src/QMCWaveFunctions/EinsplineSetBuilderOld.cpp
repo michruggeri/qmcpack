@@ -30,7 +30,7 @@
 
 namespace qmcplusplus
 {
-bool EinsplineSetBuilder::ReadOrbitalInfo()
+bool EinsplineSetBuilder::ReadOrbitalInfo(bool skipChecks)
 {
   update_token(__FILE__, __LINE__, "ReadOrbitalInfo");
   // Handle failed file open gracefully by temporarily replacing error handler
@@ -58,7 +58,7 @@ bool EinsplineSetBuilder::ReadOrbitalInfo()
   if (format.find("ES") < format.size())
   {
     Format = ESHDF;
-    return ReadOrbitalInfo_ESHDF();
+    return ReadOrbitalInfo_ESHDF(skipChecks);
   }
   //////////////////////////////////////////////////
   // Read basic parameters from the orbital file. //

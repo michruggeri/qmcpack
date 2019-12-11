@@ -158,13 +158,11 @@ bool SPOSet::put(xmlNodePtr cur)
   //initialize the number of orbital by the basis set size
   int norb = BasisSetSize;
   std::string debugc("no");
-  double orbital_mix_magnitude = 0.0;
-  bool PBC                     = false;
+  bool PBC = false;
   OhmmsAttributeSet aAttrib;
   aAttrib.add(norb, "orbitals");
   aAttrib.add(norb, "size");
   aAttrib.add(debugc, "debug");
-  aAttrib.add(orbital_mix_magnitude, "orbital_mix_magnitude");
   aAttrib.put(cur);
   setOrbitalSetSize(norb);
   xmlNodePtr occ_ptr   = NULL;
@@ -225,8 +223,6 @@ bool SPOSet::put(xmlNodePtr cur)
     app_log() << "   Single-particle orbital coefficients dims=" << C->rows() << " x " << C->cols() << std::endl;
     app_log() << C << std::endl;
   }
-
-  init_LCOrbitalSetOpt(orbital_mix_magnitude);
 
   return success && success2;
 }
@@ -424,6 +420,11 @@ void SPOSet::evaluateGradSource(const ParticleSet& P,
   APP_ABORT("SPOSetBase::evalGradSource is not implemented");
 }
 
+void SPOSet::evaluate_spin(const ParticleSet& P, int iat, ValueVector_t& psi, ValueVector_t& dpsi)
+{
+  APP_ABORT("Need specialization of " + className + "::evaluate_spin(P,iat,psi,dpsi) (vector quantities)\n");
+}
+
 #ifdef QMC_CUDA
 
 void SPOSet::evaluate(std::vector<Walker_t*>& walkers, int iat, gpu::device_vector<CTS::ValueType*>& phi)
@@ -481,5 +482,6 @@ void SPOSet::evaluate(std::vector<PosType>& pos, gpu::device_vector<CTS::Complex
   app_error() << "Required CUDA functionality not implemented. Contact developers.\n";
   abort();
 }
+
 #endif
 } // namespace qmcplusplus

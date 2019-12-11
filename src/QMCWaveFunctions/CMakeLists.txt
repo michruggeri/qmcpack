@@ -37,11 +37,16 @@ SET(WFBASE_SRCS
 
 IF(NOT QMC_COMPLEX)
   SET(WFBASE_SRCS ${WFBASE_SRCS}
+    RotatedSPOs.cpp
     FDLRWfn.cpp
     )
 ENDIF(NOT QMC_COMPLEX)
 
-
+IF(QMC_COMPLEX)
+  SET(WFBASE_SRCS ${WFBASE_SRCS}
+    SpinorSet.cpp
+  )
+ENDIF(QMC_COMPLEX)
 ########################
 # build jastrows
 ########################
@@ -150,7 +155,11 @@ IF(OHMMS_DIM MATCHES 3)
       BsplineFactory/BsplineReaderBase.cpp
       BsplineFactory/BsplineReaderInterface.cpp
       )
-
+    IF(QMC_COMPLEX)
+      SET(FERMION_SRCS ${FERMION_SRCS}
+       EinsplineSpinorSetBuilder.cpp
+      )
+    ENDIF(QMC_COMPLEX)
     IF(NOT QMC_COMPLEX)
       SET(FERMION_SRCS ${FERMION_SRCS}
         BsplineFactory/createRealSingle.cpp
@@ -204,12 +213,6 @@ SET(FERMION_SRCS ${FERMION_SRCS}
 IF(ENABLE_CUDA)
   SET(FERMION_SRCS ${FERMION_SRCS} Fermion/delayed_update_helper.cu)
 ENDIF(ENABLE_CUDA)
-
-IF(NOT QMC_COMPLEX AND NOT ENABLE_SOA)
-  SET(FERMION_SRCS ${FERMION_SRCS}
-    Fermion/SlaterDetOpt.cpp
-    )
-ENDIF(NOT QMC_COMPLEX AND NOT ENABLE_SOA)
 
 ####################################
 # create libqmcwfs
