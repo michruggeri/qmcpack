@@ -86,10 +86,10 @@ TEST_CASE("Einspline SPO from HDF5 interface", "[interfaces]")
 
   SpeciesSet& tspecies         = elec_.getSpeciesSet();
   int upIdx                    = tspecies.addSpecies("u");
-  int downIdx                  = tspecies.addSpecies("d");
+//  int downIdx                  = tspecies.addSpecies("d");
   int chargeIdx                = tspecies.addAttribute("charge");
   tspecies(chargeIdx, upIdx)   = -1;
-  tspecies(chargeIdx, downIdx) = -1;
+//  tspecies(chargeIdx, downIdx) = -1;
 
 #ifdef ENABLE_SOA
   elec_.addTable(ions_, DT_SOA);
@@ -152,10 +152,16 @@ TEST_CASE("Einspline SPO from HDF5 interface", "[interfaces]")
   REQUIRE(std::real(d2psiM[1][1]) == Approx(-4.712583065));
 
   // for vgh
+//  SPOSet::ValueVector_t psiV(psiM[1], spo->getOrbitalSetSize());
+//  SPOSet::GradVector_t dpsiV(dpsiM[1], spo->getOrbitalSetSize());
+//  SPOSet::HessVector_t ddpsiV(spo->getOrbitalSetSize());
+//  spo->evaluate(elec_, 1, psiV, dpsiV, ddpsiV);
+
+// for vgh
   SPOSet::ValueVector_t psiV(psiM[1], spo->getOrbitalSetSize());
   SPOSet::GradVector_t dpsiV(dpsiM[1], spo->getOrbitalSetSize());
   SPOSet::HessVector_t ddpsiV(spo->getOrbitalSetSize());
-  spo->evaluate(elec_, 1, psiV, dpsiV, ddpsiV);
+  spo->evaluateVGH(elec_, 1, psiV, dpsiV, ddpsiV);
 
   // Catch default is 100*(float epsilson)
   double eps = 2000 * std::numeric_limits<float>::epsilon();
