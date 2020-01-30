@@ -262,7 +262,7 @@ public:
     return std::exp(static_cast<PsiValueType>(U[iat] - curVal));
   }
 
-  inline void evaluateRatios(VirtualParticleSet& VP, std::vector<ValueType>& ratios)
+  inline void evaluateRatios(const VirtualParticleSet& VP, std::vector<ValueType>& ratios)
   {
     //vector<RealType> myr(ratios.size(),0.0);
     //const DistanceTableData* d_table=VP.getDistTable(myTableIndex);
@@ -386,7 +386,7 @@ public:
 
   inline void restore(int iat) {}
 
-  void acceptMove(ParticleSet& P, int iat)
+  void acceptMove(ParticleSet& P, int iat, bool safe_to_delay = false)
   {
     LogValue += U[iat] - curVal;
     U[iat]   = curVal;

@@ -35,7 +35,7 @@ namespace qmcplusplus
   public:
     //typedef ParticleSet::ParticleLayout_t Lattice_t ///< typedef to ParticleLayout_t found in src/Particle/ParticleBase.h
 
-    InterfaceBase(Communicate* mpicomm):myComm(mpicomm),initialized("false"), ifacename("base") {};
+    InterfaceBase(Communicate* mpicomm):initialized("false"),myComm(mpicomm),ifacename("base") {};
     InterfaceBase():initialized("false"), ifacename("base") {};
     ~InterfaceBase(){};
 

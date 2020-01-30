@@ -123,8 +123,11 @@ int ESPWSCFInterface::getNumSpecies()
 void ESPWSCFInterface::getSpeciesIDs(ParticleIndex_t& species_ids)
 {
   if (nat==-1 || nsp==-1) pwlib_getatom_info_(&nat, &nsp);
-  double Rtmp[nat][3];
- 
+  //double Rtmp[nat][3];
+  double **Rtmp;
+  Rtmp = new double*[nat];
+  for (int i=0;i<nat;i++)
+    Rtmp[i] = new double[3]; 
   std::cout << "In ESPWSCFInterface::getSpeciesIDs; number of atoms:\t" << nat << ", number of species:\t" << nsp << std::endl;
   species_ids.resize(nat);
  
@@ -134,6 +137,7 @@ void ESPWSCFInterface::getSpeciesIDs(ParticleIndex_t& species_ids)
   for (int i=0; i<nat; i++){
     species_ids[i]-=1; //this is because pwscf is a fotran code, and so indexing starts at 1 instead of 0.
     std::cout << "atom " << i << "  species " << species_ids[i] << std::endl;
+  delete [] Rtmp;
   };
   return;
 }

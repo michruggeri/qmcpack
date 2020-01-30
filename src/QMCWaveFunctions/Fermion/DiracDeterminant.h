@@ -96,7 +96,11 @@ public:
 
   /** compute multiple ratios for a particle move
    */
-  void evaluateRatios(VirtualParticleSet& VP, std::vector<ValueType>& ratios) override;
+  void evaluateRatios(const VirtualParticleSet& VP, std::vector<ValueType>& ratios) override;
+
+  void mw_evaluateRatios(const RefVector<WaveFunctionComponent>& wfc_list,
+                         const RefVector<const VirtualParticleSet>& vp_list,
+                         std::vector<std::vector<ValueType>>& ratios) override;
 
   PsiValueType ratioGrad(ParticleSet& P, int iat, GradType& grad_iat) override;
 
@@ -122,14 +126,14 @@ public:
 
   /** move was accepted, update the real container
    */
-  void acceptMove(ParticleSet& P, int iat) override;
+  void acceptMove(ParticleSet& P, int iat, bool safe_to_delay = false) override;
 
   void mw_acceptMove(const std::vector<WaveFunctionComponent*>& WFC_list,
                      const std::vector<ParticleSet*>& P_list,
-                     int iat) override
+                     int iat, bool safe_to_delay = false) override
   {
     for (int iw = 0; iw < WFC_list.size(); iw++)
-      WFC_list[iw]->acceptMove(*P_list[iw], iat);
+      WFC_list[iw]->acceptMove(*P_list[iw], iat, safe_to_delay);
   }
 
   void completeUpdates() override;
@@ -225,8 +229,19 @@ private:
 
   /// internal function computing ratio and gradients after computing the SPOs, used by ratioGrad.
   PsiValueType ratioGrad_compute(int iat, GradType& grad_iat);
+
+  /// prepare invRow
+  void prepare_invRow(int WorkingIndex)
+  {
+    invRow_id = WorkingIndex;
+    updateEng.getInvRow(psiM, WorkingIndex, invRow);
+  }
 };
 
+extern template class DiracDeterminant<>;
+#if defined(ENABLE_CUDA)
+extern template class DiracDeterminant<DelayedUpdateCUDA<QMCTraits::ValueType, QMCTraits::QTFull::ValueType>>;
+#endif
 
 } // namespace qmcplusplus
 #endif

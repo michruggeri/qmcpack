@@ -22,10 +22,8 @@ namespace qmcplusplus
   class ESInterfaceBase: public InterfaceBase
   {
   public:
-    ESInterfaceBase(Communicate* mycomm) : myComm(mycomm),InterfaceBase(mycomm),atomic_number_tag("atomic_number"),
-				           mass_tag("mass") {ifacename="ES";};
-    ESInterfaceBase() :atomic_number_tag("atomic_number"),
-				           mass_tag("mass") {ifacename="ES";};
+    ESInterfaceBase(Communicate* mycomm) : InterfaceBase(mycomm),myComm(mycomm),atomic_number_tag("atomic_number"),mass_tag("mass") {ifacename="ES";};
+    ESInterfaceBase() :atomic_number_tag("atomic_number"),mass_tag("mass") {ifacename="ES";};
     ~ESInterfaceBase(){};
 
     typedef typename ParticleSet::ParticleIndex_t ParticleIndex_t;

@@ -55,6 +55,18 @@ IF (COMPILING_ON_BGQ)
 ENDIF()
 
 ######################################################################
+# Verify Python3 available
+######################################################################
+INCLUDE(CMake/python.cmake)
+IF(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+  TEST_PYTHON_MODULE( "os"  Python3_FOUND )
+ELSE()
+  find_package(Python3)
+ENDIF()
+IF ( NOT Python3_FOUND )
+  MESSAGE( FATAL_ERROR "Could not find required python3" )
+ENDIF ( NOT Python3_FOUND )
+######################################################################
 # Verify QE executables present if QE_BIN specified
 ######################################################################
 IF ( DEFINED QE_BIN )
@@ -66,7 +78,6 @@ ENDIF()
 # Verify PYSCF package is present
 ######################################################################
 IF ( DEFINED PYSCF_BIN )
-  INCLUDE(CMake/python.cmake)
   TEST_PYTHON_MODULE(pyscf HAVE_PYSCF)
   IF (NOT HAVE_PYSCF)
     MESSAGE( FATAL_ERROR "PYSCF_BIN was specified but could not import pyscf." )
@@ -96,6 +107,19 @@ ELSE()
   SET(SYMLINK_MSG "Copying large test files uses more disk space than using symbolic links.")
 ENDIF()
 MESSAGE(STATUS "QMC_SYMLINK_TEST_FILES = ${QMC_SYMLINK_TEST_FILES}.  ${SYMLINK_MSG}")
+
+# The following option disables the extremely slow setup of full system run tests
+# This is a developer option
+# It offers a more reasonable compile debug loop if CMakeLists.txt files are being changed
+# These constom commands execution time far exceeds even the feature and compiler checks for time consumed
+# when rerunning cmake.
+#
+# On leconte: rerun of cmake with
+# slow custom commands 27 secs
+# without 8 secs
+SET( QMC_NO_SLOW_CUSTOM_TESTING_COMMANDS FALSE CACHE BOOL "Disable the slow cmake custom commands for integration tests.")
+MARK_AS_ADVANCED(QMC_NO_SLOW_CUSTOM_TESTING_COMMANDS)
+
 
 ######################################################################
 # Build level
@@ -131,6 +155,10 @@ SET (EXECUTABLE_OUTPUT_PATH ${qmcpack_BINARY_DIR}/bin CACHE PATH "Single output 
 
 ######################################################################
 # Set the compiler-time parameters
+# WALKER_MAX_PROPERTIES max number of observables + 12 or so standard
+#   props. Things like forces are per particle so you may need this to
+#   rather large.  Each property increases walker size by
+#   sizeof(FULLPRECREALTYPE)
 # OHMMS_DIM =  dimension of the problem
 # OHMMS_INDEXTYPE = type of index
 # OHMMS_PRECISION  = base precision, float, double etc
@@ -141,6 +169,8 @@ SET (EXECUTABLE_OUTPUT_PATH ${qmcpack_BINARY_DIR}/bin CACHE PATH "Single output 
 #
 # QE_INTERFACE = true if Quantum Espresso (PWSCF) interface is used
 ######################################################################
+SET(WALKER_MAX_PROPERTIES 256 CACHE STRING "Maximum number of properties tracked by walkers")
+MARK_AS_ADVANCED(WALKER_MAX_PROPERTIES)
 SET(OHMMS_DIM 3 CACHE STRING "Select physical dimension")
 SET(OHMMS_INDEXTYPE int)
 MESSAGE(STATUS "defining the float point precision")
@@ -325,13 +355,16 @@ ELSE(CMAKE_TOOLCHAIN_FILE)
     SET(CMAKE_SKIP_RPATH TRUE)
 
     # Flags for ctest
-    SET(USE_EXT_MPI_FOR_SERIAL_TESTS 1)
-    FIND_PROGRAM(MPIEXEC aprun)
-    IF(NOT MPIEXEC)
-    # For slurm use srun
-      FIND_PROGRAM(MPIEXEC srun)
-    ENDIF(NOT MPIEXEC)
-    SET(MPIEXEC_NUMPROC_FLAG "-n")
+    IF(NOT DEFINED MPIEXEC)
+      FIND_PROGRAM(MPIEXEC aprun)
+      IF(NOT MPIEXEC)
+      # For slurm use srun
+        FIND_PROGRAM(MPIEXEC srun)
+      ENDIF(NOT MPIEXEC)
+    ENDIF()
+    IF(NOT DEFINED MPIEXEC_NUMPROC_FLAG)
+      SET(MPIEXEC_NUMPROC_FLAG "-n")
+    ENDIF()
 
     IF(QMC_CUDA)
       IF(QMC_BUILD_STATIC)
@@ -526,7 +559,7 @@ ENDIF()
 # setup ctest variables
 IF ( HAVE_MPI )
   SET( USE_MPI 1 )
-  IF ( NOT MPIEXEC )
+  IF ( NOT DEFINED MPIEXEC )
     SET( MPIEXEC "mpirun" )
   ENDIF()
 
@@ -543,6 +576,7 @@ IF ( HAVE_MPI )
   ENDIF()
 
   MESSAGE(STATUS "MPI runner is ${MPIEXEC}")
+  MESSAGE(STATUS "MPIEXEC_NUMPROC_FLAG is ${MPIEXEC_NUMPROC_FLAG}")
 ENDIF(HAVE_MPI)
 
 INCLUDE(${CMAKE_ROOT}/Modules/FindThreads.cmake)
@@ -893,9 +927,11 @@ ENDIF()
 SUBDIRS(src)
 
 IF(NOT QMC_BUILD_SANDBOX_ONLY)
-  SUBDIRS(tests)
-  SUBDIRS(examples)
-  IF(IS_DIRECTORY "${PROJECT_SOURCE_DIR}/nexus")
+  IF( NOT QMC_NO_SLOW_CUSTOM_TESTING_COMMANDS )
+    SUBDIRS(tests)
+    SUBDIRS(examples)
+  ENDIF()
+  IF(IS_DIRECTORY "${PROJECT_SOURCE_DIR}/nexus" AND INSTALL_NEXUS)
     SUBDIRS(nexus/tests)
   ENDIF()
 ENDIF()

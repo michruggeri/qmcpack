@@ -28,7 +28,7 @@
 #include "QMCWaveFunctions/WaveFunctionComponentBuilder.h"
 #include "QMCWaveFunctions/BsplineFactory/createBsplineReader.h"
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderInterface.h"
-#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorBase.h"
+//#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorBase.h"
 
 //#include "qmc_common.h"
 

@@ -17,19 +17,25 @@
 #include "QMCWaveFunctions/EinsplineSetBuilder.h"
 #include "QMCWaveFunctions/EinsplineSetBuilderInterface.h"
 #include "QMCWaveFunctions/BsplineFactory/BsplineSet.h"
-#include "QMCWaveFunctions/BsplineFactory/SplineC2RAdoptor.h"
-#include "QMCWaveFunctions/BsplineFactory/SplineC2CAdoptor.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineC2R.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineC2C.h"
 #if defined(ENABLE_OFFLOAD)
 #include "QMCWaveFunctions/BsplineFactory/SplineC2ROMP.h"
 #endif
-#include "QMCWaveFunctions/BsplineFactory/HybridCplxAdoptor.h"
+#include "QMCWaveFunctions/BsplineFactory/HybridRepCplx.h"
 #include <fftw3.h>
 #include <QMCWaveFunctions/einspline_helper.hpp>
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderBase.h"
+//  <<<<<<< HEAD
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderInterface.h"
-#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderP.h"
-#include "QMCWaveFunctions/BsplineFactory/SplineHybridAdoptorReaderP.h"
-#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderPInterface.h"
+//#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderP.h"
+//#include "QMCWaveFunctions/BsplineFactory/SplineHybridAdoptorReaderP.h"
+//=======
+//#include "QMCWaveFunctions/BsplineFactory/SplineAdoptorReaderPInterface.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineSetReaderInterface.h"
+#include "QMCWaveFunctions/BsplineFactory/SplineSetReader.h"
+#include "QMCWaveFunctions/BsplineFactory/HybridRepSetReader.h"
+//>>>>>>> 7d0e44ea47f573c19d9f2c33afe1ad7b896c8d55
 
 namespace qmcplusplus
 {
@@ -40,22 +46,27 @@ BsplineReaderBase* createBsplineComplexDouble(EinsplineSetBuilder* e, bool hybri
 
 #if defined(QMC_COMPLEX)
   if (hybrid_rep)
-    aReader = new SplineHybridAdoptorReader<HybridCplxSoA<SplineC2CSoA<double, RealType>>>(e);
+    aReader = new HybridRepSetReader<HybridRepCplx<SplineC2C<double>>>(e);
   else
-    aReader = new SplineAdoptorReader<SplineC2CSoA<double, RealType>>(e);
+    aReader = new SplineSetReader<SplineC2C<double>>(e);
 #else //QMC_COMPLEX
 #if defined(ENABLE_OFFLOAD)
   if (useGPU == "yes")
   {
-    aReader = new SplineAdoptorReader<SplineC2ROMP<double, RealType>>(e);
+    if (hybrid_rep)
+    {
+      APP_ABORT("OpenMP offload has not been enabled with hybrid orbital representation!");
+    }
+    else
+      aReader = new SplineSetReader<SplineC2ROMP<double>>(e);
   }
   else
 #endif
   {
     if (hybrid_rep)
-      aReader = new SplineHybridAdoptorReader<HybridCplxSoA<SplineC2RSoA<double, RealType>>>(e);
+      aReader = new HybridRepSetReader<HybridRepCplx<SplineC2R<double>>>(e);
     else
-      aReader = new SplineAdoptorReader<SplineC2RSoA<double, RealType>>(e);
+      aReader = new SplineSetReader<SplineC2R<double>>(e);
   }
 #endif
 
@@ -67,9 +78,9 @@ BsplineReaderInterface* createBsplineComplexDouble(EinsplineSetBuilderInterface*
   BsplineReaderInterface* aReader = nullptr;
 
 #if defined(QMC_COMPLEX)
-    aReader = new SplineAdoptorReaderInterface<SplineC2CSoA<double, RealType>>(e);
+    aReader = new SplineSetReaderInterface<SplineC2C<double>>(e);
 #else //QMC_COMPLEX
-    aReader = new SplineAdoptorReaderInterface<SplineC2RSoA<double, RealType>>(e);
+    aReader = new SplineSetReaderInterface<SplineC2R<double>>(e);
 #endif
 
   return aReader;

@@ -33,7 +33,6 @@ WaveFunctionComponentPtr MultiSlaterDeterminantWithBackflow::makeClone(ParticleS
 {
   // mmorales: the proxy classes read from the particle set inside BFTrans
   BackflowTransformation* tr = BFTrans->makeClone(tqp);
-  tr->resetTargetParticleSet(tqp);
   SPOSetProxyForMSD* spo_up_C = new SPOSetProxyForMSD(spo_up->refPhi->makeClone(), FirstIndex_up, LastIndex_up);
   SPOSetProxyForMSD* spo_dn_C = new SPOSetProxyForMSD(spo_dn->refPhi->makeClone(), FirstIndex_dn, LastIndex_dn);
   spo_up_C->occup             = spo_up->occup;
@@ -355,7 +354,7 @@ WaveFunctionComponent::PsiValueType MultiSlaterDeterminantWithBackflow::ratio(Pa
   }
 }
 
-void MultiSlaterDeterminantWithBackflow::acceptMove(ParticleSet& P, int iat)
+void MultiSlaterDeterminantWithBackflow::acceptMove(ParticleSet& P, int iat, bool safe_to_delay)
 {
   // this should depend on the type of update, ratio / ratioGrad
   // for now is incorrect fot ratio(P,iat,dG,dL) updates
@@ -855,13 +854,12 @@ void MultiSlaterDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
             ValueType dpsi2                         = dpsia_dn(dnC, pa);
             ParticleSet::ParticleGradient_t& g1     = grads_up[upC];
             ParticleSet::ParticleGradient_t& g2     = grads_dn[dnC];
-#if (__INTEL_COMPILER == 1900 && !defined(QMC_COMPLEX))
-#pragma omp simd reduction(+ : dot1)
-#endif
             for (int k = 0; k < n; k++)
-              dot1 += dot((g2[k] - gmP[k]), dGa_up(upC, pa, k)) + dot((g1[k] - gmP[k]), dGa_dn(dnC, pa, k)) -
-                  static_cast<ParticleSet::SingleParticleValue_t>(dpsi1) * (dot(gmP[k], g2[k])) -
-                  static_cast<ParticleSet::SingleParticleValue_t>(dpsi2) * (dot(gmP[k], g1[k]));
+            {
+              dot1 -= static_cast<ParticleSet::SingleParticleValue_t>(dpsi1) * dot(gmP[k], g2[k]) +
+                  static_cast<ParticleSet::SingleParticleValue_t>(dpsi2) * dot(gmP[k], g1[k]);
+              dot1 += dot((g2[k] - gmP[k]), dGa_up(upC, pa, k)) + dot((g1[k] - gmP[k]), dGa_dn(dnC, pa, k));
+            }
             dlog += cdet * (dpsi1 + dpsi2);
             dhpsi += cdet *
                 (dLa_up(upC, pa) + dLa_dn(dnC, pa) + dpsi2 * tempstorage_up[upC] + dpsi1 * tempstorage_dn[dnC] +

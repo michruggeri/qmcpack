@@ -52,6 +52,11 @@ bool WaveFunctionPool::put(xmlNodePtr cur)
 //  {//check ESHDF should be used to initialize both target and associated ionic system
   ParticleSet* qp = ptcl_pool_->getParticleSet(target);
 
+  // Ye: the overall logic of the "check" is still not clear to me.
+  // The following code path should only be used when there is no cell, ion, electron info provided in the XML input.
+  // As long as any info is provided in the XML file, no need to call createESParticleSet
+  // EinsplineBuilder has code to verify cell and ion position. No need to do here.
+  if (!qp)
   { //check ESHDF should be used to initialize both target and associated ionic system
     xmlNodePtr tcur = cur->children;
     while (tcur != NULL)
@@ -65,6 +70,7 @@ bool WaveFunctionPool::put(xmlNodePtr cur)
       tcur = tcur->next;
     }
   }
+
   if (qp == 0)
   {
     APP_ABORT("WaveFunctionPool::put Target ParticleSet is not found.");

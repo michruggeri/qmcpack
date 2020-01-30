@@ -116,7 +116,7 @@ public:
   /** Set the status of the QMCDriver
    * @param aname the root file name
    * @param h5name root name of the master hdf5 file containing previous qmcrun
-   * @param append if ture, the run is a continuation of the previous qmc
+   * @param append if true, the run is a continuation of the previous qmc
    *
    * All output files will be of
    * the form "aname.s00X.suffix", where "X" is number
@@ -322,7 +322,7 @@ protected:
    *  @{
    */
   int num_crowds_;
-
+  RealType max_disp_sq_;
   ///the number of saved samples
   IndexType target_samples_;
 

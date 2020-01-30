@@ -21,7 +21,7 @@
 #include <QMCWaveFunctions/BsplineFactory/BsplineReaderInterface.h>
 #include "OhmmsData/AttributeSet.h"
 #include "Message/CommOperators.h"
-#include "qmc_common.h"
+//#include "qmc_common.h"
 
 namespace qmcplusplus
 {

@@ -47,6 +47,7 @@ struct SplineAdoptorReaderInterface : public BsplineReaderInterface
   UBspline_3d_d* spline_r;
   UBspline_3d_d* spline_i;
   BsplineSet<adoptor_type>* bspline;
+  //splineset_t* bspline
   fftw_plan FFTplan;
 
   SplineAdoptorReaderInterface(EinsplineSetBuilderInterface* e)

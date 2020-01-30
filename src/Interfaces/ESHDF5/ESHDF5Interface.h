@@ -26,8 +26,8 @@ namespace qmcplusplus
   class ESHDF5Interface: public ESInterfaceBase
   {
   public:
-    ESHDF5Interface(Communicate* mycomm):ESInterfaceBase(mycomm), myComm(mycomm), H5FileName("pwscf.h5"),H5FileID(0),box_changed(false), pos_changed(false)        {ifacename = "ESHDF5";};
-    ESHDF5Interface():H5FileName("pwscf.h5"),H5FileID(0),box_changed(false), pos_changed(false)        {ifacename = "ESHDF5";};
+    ESHDF5Interface(Communicate* mycomm):ESInterfaceBase(mycomm),myComm(mycomm),H5FileID(0),H5FileName("pwscf.h5"),box_changed(false), pos_changed(false)        {ifacename = "ESHDF5";};
+    ESHDF5Interface():H5FileID(0),H5FileName("pwscf.h5"),box_changed(false), pos_changed(false)        {ifacename = "ESHDF5";};
     ~ESHDF5Interface(){};
 
    // typedef typename ParticleSet::ParticleIndex_t ParticleIndex_t;
