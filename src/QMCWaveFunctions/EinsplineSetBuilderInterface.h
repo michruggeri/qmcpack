@@ -143,10 +143,10 @@ public:
   typedef std::map<std::string,ParticleSet*> PtclPoolType;
   typedef CrystalLattice<ParticleSet::Scalar_t,DIM> UnitCellType;
 
-  ///reference to the particleset pool
-  PtclPoolType &ParticleSets;
   ///quantum particle set
   ParticleSet &TargetPtcl;
+  ///reference to the particleset pool
+  PtclPoolType &ParticleSets;
   ///ionic system
   ParticleSet *SourcePtcl;
   ///index for the ion-el distance table
@@ -258,7 +258,6 @@ public:
   // Twist angle information //
   /////////////////////////////
   // This stores which "true" twist number I am using
-  int TwistNum;
   TinyVector<double,OHMMS_DIM> givenTwist;
   std::vector<TinyVector<double,OHMMS_DIM> > TwistAngles;
 //     integer index of sym operation from the irreducible brillion zone
@@ -269,6 +268,7 @@ public:
   TinyVector<int,OHMMS_DIM> TileFactor;
   Tensor<int,OHMMS_DIM> TileMatrix;
   TinyVector<int,OHMMS_DIM> TwistMesh;
+  int TwistNum;
   // This vector stores which twist indices will be used by this
   // clone
   std::vector<TinyVector<int,OHMMS_DIM> > UseTwists;
@@ -298,15 +298,6 @@ public:
 
   void CopyBands(int numOrbs);
 
-  /////////////////////////////
-  // Muffin-tin information  //
-  /////////////////////////////
-  int NumMuffinTins;
-  std::vector<double> MT_APW_radii;
-  std::vector<Vector<double> > MT_APW_rgrids;
-  std::vector<int> MT_APW_lmax;
-  std::vector<int> MT_APW_num_radial_points;
-  std::vector<TinyVector<double, OHMMS_DIM> > MT_centers;
 
   ////////////////////////////////
   // Atomic orbital information //
@@ -347,6 +338,16 @@ public:
   // spin-restricted calculations.                           //
   /////////////////////////////////////////////////////////////
   int LastSpinSet, NumOrbitalsRead;
+
+  /////////////////////////////
+  // Muffin-tin information  //
+  /////////////////////////////
+  int NumMuffinTins;
+  std::vector<double> MT_APW_radii;
+  std::vector<Vector<double> > MT_APW_rgrids;
+  std::vector<int> MT_APW_lmax;
+  std::vector<int> MT_APW_num_radial_points;
+  std::vector<TinyVector<double, OHMMS_DIM> > MT_centers;
 
   std::string occ_format;
   int particle_hole_pairs;

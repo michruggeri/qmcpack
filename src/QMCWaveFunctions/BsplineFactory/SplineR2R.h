@@ -190,6 +190,7 @@ public:
 
   template<class BSPLINESPO>
   friend class SplineSetReader;
+  template<class BSPLINESPO>
   friend class SplineSetReaderInterface;
   friend class BsplineReaderBase;
   friend class BsplineReaderInterface;

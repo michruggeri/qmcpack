@@ -38,12 +38,11 @@ namespace qmcplusplus
 // Constructor (from EinsplineSetBuilderCommon.cpp)
 
 EinsplineSetBuilderInterface::EinsplineSetBuilderInterface(ParticleSet& p, PtclPoolType& psets, Communicate *comm, xmlNodePtr cur,std::string label)
-: SPOSetBuilder(comm), TargetPtcl(p),ParticleSets(psets), MixedSplineReader(0), XMLRoot(cur), Format(QMCPACK),
-TileFactor(1,1,1), TwistNum(0), LastSpinSet(-1),
-NumOrbitalsRead(-1), NumMuffinTins(0), NumCoreStates(0),
+: SPOSetBuilder(comm), TargetPtcl(p),ParticleSets(psets), MixedSplineReader(0),esinterface(0), XMLRoot(cur),
+intlabel(label),H5FileID(-1),Format(QMCPACK),
 NumBands(0), NumElectrons(0), NumSpins(0), NumTwists(0),
-H5FileID(-1), makeRotations(false), MeshFactor(1.0), MeshSize(0,0,0),
-esinterface(0),intlabel(label)
+NumCoreStates(0),
+ MeshFactor(1.0), MeshSize(0,0,0),TileFactor(1,1,1),TwistNum(0),LastSpinSet(-1),NumOrbitalsRead(-1),NumMuffinTins(0),makeRotations(false)
 {
   //assume one, not safe!! 
   myTableIndex=1;

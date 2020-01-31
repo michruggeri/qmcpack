@@ -112,10 +112,6 @@ TEST_CASE("Einspline SPO from HDF5 interface", "[interfaces]")
 <determinantset type=\"interfaceh5\" href=\"pwscf.pwscf.h5\" tilematrix=\"1 0 0 0 1 0 0 0 1\" twistnum=\"0\" source=\"ion\" meshfactor=\"1.0\" precision=\"float\" size=\"4\"/> \
 </tmp> \
 ";
-
-  // monoO
-  //<determinantset type=\"einspline\" href=\"pwscf.pwscf.h5\" tilematrix=\"1 0 0 0 1 0 0 0 1\" twistnum=\"0\" source=\"ion\" meshfactor=\"1.0\" precision=\"float\" size=\"6\"/> \
-
   Libxml2Document doc;
   bool okay = doc.parseFromString(particles);
   REQUIRE(okay);
