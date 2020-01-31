@@ -206,8 +206,6 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
     PRE.error("Einspline is missing for B-spline orbitals", true);
 #endif
   }
-///////////////////
-  //else if(type.find("interface")<type.size())
   else if(type.find("interfaceh5")<type.size())
   {
     name=type_in;
@@ -228,7 +226,6 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
     PRE.error("Einspline is missing for B-spline orbitals",true);
 #endif
   }
-///////////////////
   else if(type == "molecularorbital" || type == "mo")
   {
     ParticleSet* ions = 0;

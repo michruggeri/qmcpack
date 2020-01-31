@@ -18,6 +18,7 @@ namespace qmcplusplus
 {
 SPOSetBuilder::SPOSetBuilder(Communicate* comm) : MPIObjectBase(comm), legacy(true) { reserve_states(); }
 
+
 void SPOSetBuilder::reserve_states(int nsets)
 {
   int sets_needed = nsets - states.size();

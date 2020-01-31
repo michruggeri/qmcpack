@@ -26,8 +26,6 @@
 #include "ParticleIO/ESHDFParticleParser.h"
 #include "ParticleBase/RandomSeqGenerator.h"
 
-#include "qmc_common.h"
-
 namespace qmcplusplus
 {
 bool EinsplineSetBuilder::ReadOrbitalInfo(bool skipChecks)

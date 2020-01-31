@@ -60,13 +60,8 @@ ADD_EXECUTABLE(${UTEST_EXE} test_wf.cpp test_TrialWaveFunction.cpp test_wavefunc
                test_dirac_det.cpp test_multi_dirac_determinant.cpp test_dirac_matrix.cpp
                test_rpa_jastrow.cpp test_example_he.cpp test_user_jastrow.cpp
                test_lattice_gaussian.cpp test_kspace_jastrow.cpp
-#<<<<<<< HEAD
-               test_short_range_cusp_jastrow.cpp test_TrialWaveFunction.cpp ${MO_SRCS})
+               test_short_range_cusp_jastrow.cpp ${MO_SRCS})
 TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcwfs qmcbase qmcutil interface ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
-#=======
-#               test_short_range_cusp_jastrow.cpp ${MO_SRCS})
-#TARGET_LINK_LIBRARIES(${UTEST_EXE} qmc qmcwfs qmcbase qmcutil ${QMC_UTIL_LIBS} ${MPI_LIBRARY})
-#>>>>>>> 7d0e44ea47f573c19d9f2c33afe1ad7b896c8d55
 
 ADD_UNIT_TEST(${UTEST_NAME} "${QMCPACK_UNIT_TEST_DIR}/${UTEST_EXE}")
 SET_TESTS_PROPERTIES(${UTEST_NAME} PROPERTIES WORKING_DIRECTORY ${UTEST_DIR})

@@ -26,6 +26,7 @@
 #include <QMCWaveFunctions/SPOSetInputInfo.h>
 #include "QMCWaveFunctions/SPOSet.h"
 
+
 namespace qmcplusplus
 {
 /** base class for the real SPOSet builder
