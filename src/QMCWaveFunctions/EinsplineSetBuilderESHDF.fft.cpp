@@ -429,6 +429,7 @@ void EinsplineSetBuilder::OccupyBands_ESHDF(int spin, int sortBands, int numOrbs
     std::ostringstream ePath;
     ePath << "/electrons/kpoint_" << tindex << "/spin_" << spin << "/eigenvalues";
     std::vector<double> eigvals;
+    std::cout << ePath.str() << std::endl;
     HDFAttribIO<std::vector<double>> h_eigvals(eigvals);
     h_eigvals.read(H5FileID, ePath.str().c_str());
     for (int bi = 0; bi < NumBands; bi++)
@@ -640,7 +641,7 @@ void EinsplineSetBuilder::OccupyBands_ESHDF(int spin, int sortBands, int numOrbs
     orbIndex++;
   }
   NumDistinctOrbitals = orbIndex;
-  app_log() << "We will read " << NumDistinctOrbitals << " distinct orbitals.\n";
+  app_log() << "AAAWe will read " << NumDistinctOrbitals << "\t" << numOrbs << " distinct orbitals.\n";
   app_log() << "There are " << NumCoreOrbs << " core states and " << NumValenceOrbs << " valence states.\n";
 }
 

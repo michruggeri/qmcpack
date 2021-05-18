@@ -35,6 +35,7 @@
 #include "QMCHamiltonians/DensityEstimator.h"
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
+#include "QMCHamiltonians/CosineExternalPotential.h"
 #include "QMCHamiltonians/GridExternalPotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
 #include "QMCHamiltonians/SpinDensity.h"
@@ -193,6 +194,12 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         HarmonicExternalPotential* hs = new HarmonicExternalPotential(targetPtcl);
         hs->put(cur);
         targetH->addOperator(hs, "HarmonicExt", true);
+      }
+      if (potType == "cosine")
+      {
+        CosineExternalPotential* hs = new CosineExternalPotential(targetPtcl);
+        hs->put(cur);
+        targetH->addOperator(hs, "Cosine", true);
       }
       if (potType == "grid")
       {
